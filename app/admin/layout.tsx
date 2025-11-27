@@ -1,0 +1,46 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+
+const navItems = [
+  { label: "Overview", href: "/admin" },
+  { label: "Navigation", href: "/admin/navigation" },
+  { label: "Services", href: "/admin/services" },
+  { label: "Blogs", href: "/admin/blogs" },
+  { label: "Pages", href: "/admin/pages" },
+];
+
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  return (
+    <div className="flex min-h-screen bg-slate-50">
+      <aside className="hidden w-64 flex-col border-r border-slate-200 bg-white px-6 py-8 md:flex">
+        <Link href="/" className="text-xl font-semibold text-slate-900">
+          Taxlegit Admin
+        </Link>
+        <nav className="mt-8 flex flex-col gap-1 text-sm font-medium text-slate-600">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="rounded-2xl px-3 py-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="mt-auto space-y-1 text-xs text-slate-500">
+          <p>{session.user.email}</p>
+          <p className="font-semibold text-slate-700">{session.user.role}</p>
+        </div>
+      </aside>
+      <main className="flex-1 px-4 py-8 md:px-10">{children}</main>
+    </div>
+  );
+}
+

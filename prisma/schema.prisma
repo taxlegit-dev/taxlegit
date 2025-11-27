@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Region {
+  INDIA
+  US
+}
+
+enum NavbarItemType {
+  LINK
+  DROPDOWN
+  BUTTON
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PageKey {
+  HOME
+  ABOUT
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String
+  role          Role      @default(USER)
+  region        Region?   // preferred region for quick filtering in admin
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+  refresh_token_expires_in Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model NavbarItem {
+  id          String          @id @default(cuid())
+  label       String
+  href        String?
+  order       Int             @default(0)
+  type        NavbarItemType  @default(LINK)
+  isLoginLink Boolean         @default(false)
+  isActive    Boolean         @default(true)
+  region      Region          @default(INDIA)
+  parentId    String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  parent   NavbarItem? @relation("NavbarHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children NavbarItem[] @relation("NavbarHierarchy")
+
+  @@unique([region, label], map: "NavbarItem_region_label_unique")
+}
+
+model ServiceCategory {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String
+  summary     String?
+  region      Region    @default(INDIA)
+  order       Int       @default(0)
+  isFeatured  Boolean   @default(false)
+  icon        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  services Service[]
+
+  @@unique([slug, region])
+}
+
+model Service {
+  id             String        @id @default(cuid())
+  categoryId     String
+  title          String
+  slug           String
+  excerpt        String?
+  heroImageUrl   String?
+  gallery        Json?
+  content        Json
+  faq            Json?
+  additionalInfo Json?
+  seoMeta        Json?
+  region         Region        @default(INDIA)
+  status         ContentStatus @default(DRAFT)
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  category ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, slug])
+  @@unique([slug, region])
+  @@index([region, status])
+}
+
+model Blog {
+  id           String        @id @default(cuid())
+  title        String
+  slug         String
+  excerpt      String?
+  coverImage   String?
+  tags         String[]
+  content      Json
+  seoMeta      Json?
+  region       Region        @default(INDIA)
+  status       ContentStatus @default(DRAFT)
+  publishedAt  DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([slug, region])
+  @@index([region, status])
+}
+
+model StaticPage {
+  id          String        @id @default(cuid())
+  key         PageKey
+  region      Region        @default(INDIA)
+  title       String
+  heroImage   String?
+  content     Json
+  seoMeta     Json?
+  publishedAt DateTime?
+  status      ContentStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([key, region])
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  url       String
+  alt       String?
+  mimeType  String
+  width     Int?
+  height    Int?
+  region    Region    @default(INDIA)
+  uploadedBy String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
