@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Region } from "@prisma/client";
+import { Region, ContentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { RegionSwitcher } from "@/components/navigation/region-switcher";
-import { toSupportedRegion } from "@/lib/region-cookie";
+import { toSupportedRegion } from "@/lib/regions";
 
 type NavbarProps = {
   region: Region;
@@ -19,6 +19,9 @@ export async function Navbar({ region }: NavbarProps) {
       orderBy: { order: "asc" },
       include: {
         services: {
+          where: {
+            status: ContentStatus.PUBLISHED,
+          },
           select: {
             id: true,
             title: true,

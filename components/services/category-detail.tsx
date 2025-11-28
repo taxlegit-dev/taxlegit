@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Region } from "@prisma/client";
-import { Navbar } from "@/components/navigation/navbar";
+import { NavbarServer } from "@/components/navigation/navbar-server";
 import { getServiceCategories, getServicesByCategory } from "@/lib/queries";
 
 type CategoryDetailProps = {
@@ -16,7 +16,7 @@ export async function CategoryDetail({ region, regionPrefix, slug }: CategoryDet
   if (!category) {
     return (
       <div className="min-h-screen bg-white">
-        <Navbar region={region} />
+        <NavbarServer region={region} />
         <main className="mx-auto w-full max-w-4xl px-6 py-16 text-center">
           <p className="text-sm text-zinc-500">Category not found</p>
         </main>
@@ -26,7 +26,7 @@ export async function CategoryDetail({ region, regionPrefix, slug }: CategoryDet
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar region={region} />
+      <NavbarServer region={region} />
       <main className="mx-auto w-full max-w-5xl px-6 py-12 space-y-8">
         <div className="space-y-4">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">Category</p>

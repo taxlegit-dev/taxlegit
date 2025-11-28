@@ -49,12 +49,27 @@ function renderNode(node: RichTextDocument, index: number, theme: "light" | "dar
       );
     case "heading":
       const level = node.attrs?.level ?? 2;
-      const Tag = `h${level}` as keyof JSX.IntrinsicElements;
-      return (
-        <Tag key={index} className={`font-semibold ${theme === "dark" ? "text-white" : "text-zinc-900"}`}>
-          {node.content?.map((child, idx) => renderNode(child, idx, theme))}
-        </Tag>
-      );
+      const headingProps = {
+        key: index,
+        className: `font-semibold ${theme === "dark" ? "text-white" : "text-zinc-900"}`,
+        children: node.content?.map((child, idx) => renderNode(child, idx, theme)),
+      };
+      switch (level) {
+        case 1:
+          return <h1 {...headingProps} />;
+        case 2:
+          return <h2 {...headingProps} />;
+        case 3:
+          return <h3 {...headingProps} />;
+        case 4:
+          return <h4 {...headingProps} />;
+        case 5:
+          return <h5 {...headingProps} />;
+        case 6:
+          return <h6 {...headingProps} />;
+        default:
+          return <h2 {...headingProps} />;
+      }
     case "bulletList":
       return (
         <ul key={index} className={`list-disc pl-6 ${theme === "dark" ? "text-slate-200" : "text-zinc-600"}`}>

@@ -2,8 +2,47 @@ import { NextResponse } from "next/server";
 import { NavbarItemType, Region } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { createNavItemSchema } from "@/lib/validators";
+import { createNavItemSchema, updateNavItemSchema, reorderNavItemsSchema } from "@/lib/validators";
 
+const navTypeMap: Record<"LINK" | "DROPDOWN" | "BUTTON", NavbarItemType> = {
+  LINK: NavbarItemType.LINK,
+  DROPDOWN: NavbarItemType.DROPDOWN,
+  BUTTON: NavbarItemType.BUTTON,
+};
+
+// GET - Fetch all navbar items for a region
+export async function GET(request: Request) {
+  const session = await auth();
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const regionParam = searchParams.get("region");
+  const region = regionParam === "US" ? Region.US : Region.INDIA;
+
+  const items = await prisma.navbarItem.findMany({
+    where: { region },
+    include: {
+      children: {
+        orderBy: { order: "asc" },
+      },
+    },
+    orderBy: { order: "asc" },
+  });
+
+  // Separate top-level items and their children
+  const topLevelItems = items.filter((item) => !item.parentId);
+  const structuredItems = topLevelItems.map((item) => ({
+    ...item,
+    children: item.children,
+  }));
+
+  return NextResponse.json({ items: structuredItems });
+}
+
+// POST - Create a new navbar item
 export async function POST(request: Request) {
   const session = await auth();
 
@@ -18,6 +57,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  // Validate parent exists if parentId is provided
+  if (parsed.data.parentId) {
+    const parent = await prisma.navbarItem.findUnique({
+      where: { id: parsed.data.parentId },
+    });
+
+    if (!parent) {
+      return NextResponse.json({ error: "Parent item not found" }, { status: 404 });
+    }
+
+    if (parent.region !== (parsed.data.region === "US" ? Region.US : Region.INDIA)) {
+      return NextResponse.json({ error: "Parent item must be in the same region" }, { status: 400 });
+    }
+  }
+
   const item = await prisma.navbarItem.create({
     data: {
       label: parsed.data.label,
@@ -26,14 +80,166 @@ export async function POST(request: Request) {
       type: navTypeMap[parsed.data.type],
       region: parsed.data.region === "US" ? Region.US : Region.INDIA,
       isLoginLink: parsed.data.isLoginLink ?? false,
+      ...(parsed.data.parentId && parsed.data.parentId.trim() !== ""
+        ? { parent: { connect: { id: parsed.data.parentId } } }
+        : {}),
+      groupLabel: parsed.data.groupLabel,
+    },
+    include: {
+      parent: true,
+      children: true,
     },
   });
-const navTypeMap: Record<"LINK" | "DROPDOWN" | "BUTTON", NavbarItemType> = {
-  LINK: NavbarItemType.LINK,
-  DROPDOWN: NavbarItemType.DROPDOWN,
-  BUTTON: NavbarItemType.BUTTON,
-};
 
   return NextResponse.json({ item });
 }
 
+// PUT - Update a navbar item
+export async function PUT(request: Request) {
+  const session = await auth();
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const payload = await request.json();
+  const parsed = updateNavItemSchema.safeParse(payload);
+
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  // Check if item exists
+  const existingItem = await prisma.navbarItem.findUnique({
+    where: { id: parsed.data.id },
+  });
+
+  if (!existingItem) {
+    return NextResponse.json({ error: "Item not found" }, { status: 404 });
+  }
+
+  // Validate parent if parentId is being changed
+  if (parsed.data.parentId && parsed.data.parentId !== existingItem.parentId) {
+    const parent = await prisma.navbarItem.findUnique({
+      where: { id: parsed.data.parentId },
+    });
+
+    if (!parent) {
+      return NextResponse.json({ error: "Parent item not found" }, { status: 404 });
+    }
+
+    // Prevent circular references
+    if (parsed.data.parentId === parsed.data.id) {
+      return NextResponse.json({ error: "Item cannot be its own parent" }, { status: 400 });
+    }
+
+    // Check if parent is a descendant (prevent deep nesting)
+    const checkDescendant = async (itemId: string, targetId: string): Promise<boolean> => {
+      const item = await prisma.navbarItem.findUnique({
+        where: { id: itemId },
+        include: { children: true },
+      });
+      if (!item) return false;
+      if (item.children.some((child) => child.id === targetId)) return true;
+      for (const child of item.children) {
+        if (await checkDescendant(child.id, targetId)) return true;
+      }
+      return false;
+    };
+
+    if (await checkDescendant(parsed.data.id, parsed.data.parentId)) {
+      return NextResponse.json({ error: "Cannot set parent to a descendant" }, { status: 400 });
+    }
+  }
+
+  const updateData: any = {
+    label: parsed.data.label,
+    href: parsed.data.href,
+    order: parsed.data.order,
+    type: navTypeMap[parsed.data.type],
+    isLoginLink: parsed.data.isLoginLink ?? false,
+    groupLabel: parsed.data.groupLabel,
+    isActive: parsed.data.isActive ?? existingItem.isActive,
+  };
+
+  // Handle parentId: if provided and not empty, connect; if empty string, disconnect; if undefined, don't change
+  if (parsed.data.parentId !== undefined) {
+    if (parsed.data.parentId.trim() !== "") {
+      updateData.parent = { connect: { id: parsed.data.parentId } };
+    } else {
+      updateData.parent = { disconnect: true };
+    }
+  }
+
+  const item = await prisma.navbarItem.update({
+    where: { id: parsed.data.id },
+    data: updateData,
+    include: {
+      parent: true,
+      children: true,
+    },
+  });
+
+  return NextResponse.json({ item });
+}
+
+// DELETE - Delete a navbar item
+export async function DELETE(request: Request) {
+  const session = await auth();
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ error: "Item ID is required" }, { status: 400 });
+  }
+
+  // Check if item exists
+  const existingItem = await prisma.navbarItem.findUnique({
+    where: { id },
+    include: { children: true },
+  });
+
+  if (!existingItem) {
+    return NextResponse.json({ error: "Item not found" }, { status: 404 });
+  }
+
+  // Delete item (children will be cascade deleted)
+  await prisma.navbarItem.delete({
+    where: { id },
+  });
+
+  return NextResponse.json({ success: true, message: "Item deleted successfully" });
+}
+
+// PATCH - Reorder navbar items
+export async function PATCH(request: Request) {
+  const session = await auth();
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const payload = await request.json();
+  const parsed = reorderNavItemsSchema.safeParse(payload);
+
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  // Update order for all items in a transaction
+  await prisma.$transaction(
+    parsed.data.items.map((item) =>
+      prisma.navbarItem.update({
+        where: { id: item.id },
+        data: { order: item.order },
+      })
+    )
+  );
+
+  return NextResponse.json({ success: true, message: "Items reordered successfully" });
+}

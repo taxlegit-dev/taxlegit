@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../node_modules/.prisma/client"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -38,6 +38,7 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String    @unique
+  contact       String?   // phone number or contact info
   emailVerified DateTime?
   image         String?
   passwordHash  String
@@ -97,6 +98,7 @@ model NavbarItem {
   isActive    Boolean         @default(true)
   region      Region          @default(INDIA)
   parentId    String?
+  groupLabel  String?         // For grouping submenu items (e.g., "Company Registration", "Compliance and Licensing")
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
@@ -104,6 +106,7 @@ model NavbarItem {
   children NavbarItem[] @relation("NavbarHierarchy")
 
   @@unique([region, label], map: "NavbarItem_region_label_unique")
+  @@index([region, parentId, order])
 }
 
 model ServiceCategory {

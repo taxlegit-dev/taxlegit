@@ -31,11 +31,28 @@ export const createBlogSchema = z.object({
 
 export const createNavItemSchema = z.object({
   label: z.string().min(2),
-  href: z.string().min(1).optional(),
+  href: z.string().optional(),
   order: z.number().int().min(0).default(0),
   type: z.enum(["LINK", "DROPDOWN", "BUTTON"]).default("LINK"),
   region: regionEnum,
   isLoginLink: z.boolean().default(false),
+  parentId: z.string().optional(),
+  groupLabel: z.string().optional(), // For grouping submenu items in mega-menu
+});
+
+export const updateNavItemSchema = createNavItemSchema.extend({
+  id: z.string().min(1),
+  isActive: z.boolean().optional(),
+});
+
+export const reorderNavItemsSchema = z.object({
+  items: z.array(
+    z.object({
+      id: z.string().min(1),
+      order: z.number().int().min(0),
+    })
+  ),
+  region: regionEnum,
 });
 
 export const updateStaticPageSchema = z.object({

@@ -6,6 +6,7 @@ import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -44,13 +45,13 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
       });
 
       if (result?.error) {
-        setError("Invalid credentials or access denied. US users cannot login. Only India users can access the portal.");
+        setError("Invalid email or password. Please try again.");
         return;
       }
 
-      // The redirect will be handled by the login page based on user role
-      router.push(result?.url ?? redirectTo ?? "/");
+      // Refresh to let server-side login page handle redirect based on role
       router.refresh();
+      router.push("/login");
     });
   });
 
@@ -91,7 +92,10 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
         {isPending ? "Signing in..." : "Sign in"}
       </button>
       <p className="text-center text-xs text-zinc-500">
-        Use the seeded admin credentials or update them in prisma/seed.ts before running `npm run db:push`.
+        Don't have an account?{" "}
+        <Link href="/signup" className="font-semibold text-indigo-600 hover:text-indigo-500">
+          Sign up
+        </Link>
       </p>
     </form>
   );

@@ -1,3 +1,5 @@
+import { Region } from "@prisma/client";
+
 export const REGION_COOKIE_NAME = "taxlegit-region";
 
 export type SupportedRegion = "INDIA" | "US";
@@ -17,5 +19,9 @@ export function getFallbackRegion(pathname?: string): SupportedRegion {
     return "US";
   }
   return "INDIA";
+}
+
+export function toSupportedRegion(region: Region): SupportedRegion {
+  return region === Region.US ? "US" : "INDIA";
 }
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Region } from "@prisma/client";
-import { Navbar } from "@/components/navigation/navbar";
+import { NavbarServer } from "@/components/navigation/navbar-server";
 import { getBlogs } from "@/lib/queries";
 
 type BlogIndexProps = {
@@ -15,7 +15,7 @@ export async function BlogIndex({ region, regionPrefix, heading, description }: 
 
   return (
     <div className={`min-h-screen ${region === Region.US ? "bg-slate-950 text-white" : "bg-white"}`}>
-      <Navbar region={region} />
+      <NavbarServer region={region} />
       <main className="mx-auto w-full max-w-6xl px-6 py-12 space-y-8">
         <div className="space-y-4">
           <p className={`text-xs font-semibold uppercase tracking-[0.35em] ${region === Region.US ? "text-emerald-300" : "text-indigo-500"}`}>

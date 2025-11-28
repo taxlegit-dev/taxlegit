@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Region } from "@prisma/client";
-import { Navbar } from "@/components/navigation/navbar";
+import { NavbarServer } from "@/components/navigation/navbar-server";
 import { getServiceCategories } from "@/lib/queries";
 
 type ServiceIndexProps = {
@@ -13,7 +13,7 @@ export async function ServiceIndex({ region, regionPrefix }: ServiceIndexProps) 
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar region={region} />
+      <NavbarServer region={region} />
       <main className="mx-auto w-full max-w-6xl px-6 py-12">
         <div className="space-y-4">
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-indigo-500">Services</p>

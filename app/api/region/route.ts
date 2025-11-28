@@ -9,7 +9,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unsupported region" }, { status: 400 });
   }
 
-  cookies().set(REGION_COOKIE_NAME, region, {
+  const cookieStore = await cookies();
+  cookieStore.set(REGION_COOKIE_NAME, region, {
     httpOnly: false,
     sameSite: "lax",
     path: "/",

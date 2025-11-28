@@ -3,11 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { RegionFilter } from "@/components/admin/region-filter";
 
 type AdminPageProps = {
-  searchParams?: { region?: string };
+  searchParams?: Promise<{ region?: string }>;
 };
 
 export default async function AdminDashboard({ searchParams }: AdminPageProps) {
-  const selectedRegion = searchParams?.region === "US" ? Region.US : Region.INDIA;
+  const params = await searchParams;
+  const selectedRegion = params?.region === "US" ? Region.US : Region.INDIA;
 
   const [categoryCount, serviceCount, blogCount, navCount] = await Promise.all([
     prisma.serviceCategory.count({ where: { region: selectedRegion } }),

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Region, PageKey } from "@prisma/client";
-import { Navbar } from "@/components/navigation/navbar";
+import { NavbarServer } from "@/components/navigation/navbar-server";
 import { RichContent } from "@/components/rich-text/rich-content";
 import { getBlogs, getServiceCategories, getStaticPage } from "@/lib/queries";
 import type { RichTextDocument } from "@/types/rich-text";
@@ -16,7 +16,7 @@ export default async function UsHomePage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
-      <Navbar region={region} />
+      <NavbarServer region={region} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-12 px-6 py-12">
         <section className="rounded-3xl border border-white/10 bg-slate-900 p-10 shadow-2xl">
           <div className="space-y-5">

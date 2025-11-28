@@ -1,24 +1,13 @@
 import "dotenv/config";
 import { PrismaClient, Region, Role, ContentStatus, PageKey, NavbarItemType } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error("DATABASE_URL is not set. Seed script cannot run.");
-}
-
-const adapter = new PrismaPg({
-  connectionString,
-});
-
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function seedUsers() {
   const adminEmail = process.env.ADMIN_EMAIL ?? "admin@taxlegit.com";
   const adminPassword = process.env.ADMIN_PASSWORD ?? "Admin@123";
-  const passwordHash = await bcrypt.hash(adminPassword, 12);
+  const adminPasswordHash = await bcrypt.hash(adminPassword, 12);
 
   await prisma.user.upsert({
     where: { email: adminEmail },
@@ -27,7 +16,22 @@ async function seedUsers() {
       email: adminEmail,
       name: "Taxlegit Admin",
       role: Role.ADMIN,
-      passwordHash,
+      passwordHash: adminPasswordHash,
+    },
+  });
+
+  const userEmail = "user@taxlegit.com";
+  const userPassword = "User@123";
+  const userPasswordHash = await bcrypt.hash(userPassword, 12);
+
+  await prisma.user.upsert({
+    where: { email: userEmail },
+    update: {},
+    create: {
+      email: userEmail,
+      name: "Taxlegit User",
+      role: Role.USER,
+      passwordHash: userPasswordHash,
     },
   });
 }
@@ -95,53 +99,190 @@ async function seedStaticPages() {
 }
 
 async function seedNavigation() {
-  const navs = [
-    {
+  // Clear existing navigation items
+  await prisma.navbarItem.deleteMany({});
+
+  // INDIA Region - Mega Menu Structure
+  const startBusinessIndia = await prisma.navbarItem.create({
+    data: {
+      label: "Start A Business",
+      href: null,
+      order: 0,
+      type: NavbarItemType.DROPDOWN,
       region: Region.INDIA,
-      items: [
-        { label: "Home", href: "/", order: 0, type: NavbarItemType.LINK },
-        { label: "Services", href: "/services", order: 1, type: NavbarItemType.DROPDOWN },
-        { label: "Blog", href: "/blog", order: 2, type: NavbarItemType.LINK },
-        { label: "About", href: "/about", order: 3, type: NavbarItemType.LINK },
-        { label: "Login", href: "/login", order: 4, type: NavbarItemType.BUTTON, isLoginLink: true },
-      ],
     },
-    {
-      region: Region.US,
-      items: [
-        { label: "US Home", href: "/us", order: 0, type: NavbarItemType.LINK },
-        { label: "About", href: "/us/about", order: 1, type: NavbarItemType.LINK },
-        { label: "Login", href: "/login", order: 2, type: NavbarItemType.BUTTON, isLoginLink: true },
-      ],
-    },
+  });
+
+  // Company Registration Group
+  const companyRegGroup = [
+    { label: "Private Limited Company Registration", href: "/services/company-registration/private-limited-registration", order: 0 },
+    { label: "LLP Registration", href: "/services/company-registration/llp-registration", order: 1 },
+    { label: "OPC Registration", href: "/services/company-registration/opc-registration", order: 2 },
+    { label: "Section 8 Registration", href: "/services/company-registration/section-8-registration", order: 3 },
+    { label: "Sole Proprietorship Registration", href: "/services/company-registration/sole-proprietorship-registration", order: 4 },
   ];
 
-  for (const nav of navs) {
-    for (const item of nav.items) {
-      await prisma.navbarItem.upsert({
-        where: {
-          region_label: {
-            region: nav.region,
-            label: item.label,
-          },
-        },
-        update: {
-          order: item.order,
-          href: item.href,
-          type: item.type,
-          isLoginLink: item.isLoginLink ?? false,
-        },
-        create: {
-          label: item.label,
-          href: item.href,
-          order: item.order,
-          region: nav.region,
-          type: item.type,
-          isLoginLink: item.isLoginLink ?? false,
-        },
-      });
-    }
+  for (const item of companyRegGroup) {
+    await prisma.navbarItem.create({
+      data: {
+        label: item.label,
+        href: item.href,
+        order: item.order,
+        type: NavbarItemType.LINK,
+        region: Region.INDIA,
+        parentId: startBusinessIndia.id,
+        groupLabel: "Company Registration",
+      },
+    });
   }
+
+  // Compliance and Licensing Group
+  const complianceGroup = [
+    { label: "ISO Registration", href: "/services/compliance/iso-registration", order: 0 },
+    { label: "FSSAI Registration", href: "/services/compliance/fssai-registration", order: 1 },
+    { label: "ISP License Registration", href: "/services/compliance/isp-license-registration", order: 2 },
+  ];
+
+  for (const item of complianceGroup) {
+    await prisma.navbarItem.create({
+      data: {
+        label: item.label,
+        href: item.href,
+        order: item.order,
+        type: NavbarItemType.LINK,
+        region: Region.INDIA,
+        parentId: startBusinessIndia.id,
+        groupLabel: "Compliance and Licensing",
+      },
+    });
+  }
+
+  // Other top-level items for India
+  await prisma.navbarItem.create({
+    data: {
+      label: "Home",
+      href: "/",
+      order: 1,
+      type: NavbarItemType.LINK,
+      region: Region.INDIA,
+    },
+  });
+
+  await prisma.navbarItem.create({
+    data: {
+      label: "Blog",
+      href: "/blog",
+      order: 2,
+      type: NavbarItemType.LINK,
+      region: Region.INDIA,
+    },
+  });
+
+  await prisma.navbarItem.create({
+    data: {
+      label: "About",
+      href: "/about",
+      order: 3,
+      type: NavbarItemType.LINK,
+      region: Region.INDIA,
+    },
+  });
+
+  await prisma.navbarItem.create({
+    data: {
+      label: "Login",
+      href: "/login",
+      order: 4,
+      type: NavbarItemType.BUTTON,
+      isLoginLink: true,
+      region: Region.INDIA,
+    },
+  });
+
+  // US Region - Mega Menu Structure
+  const startBusinessUS = await prisma.navbarItem.create({
+    data: {
+      label: "Start A Business",
+      href: null,
+      order: 0,
+      type: NavbarItemType.DROPDOWN,
+      region: Region.US,
+    },
+  });
+
+  // US Company Formation Group
+  const usCompanyGroup = [
+    { label: "Delaware C-Corp Formation", href: "/us/services/incorporation/delaware-c-corp", order: 0 },
+    { label: "LLC Formation", href: "/us/services/incorporation/llc-formation", order: 1 },
+    { label: "S-Corp Election", href: "/us/services/incorporation/s-corp-election", order: 2 },
+  ];
+
+  for (const item of usCompanyGroup) {
+    await prisma.navbarItem.create({
+      data: {
+        label: item.label,
+        href: item.href,
+        order: item.order,
+        type: NavbarItemType.LINK,
+        region: Region.US,
+        parentId: startBusinessUS.id,
+        groupLabel: "Company Formation",
+      },
+    });
+  }
+
+  // US Compliance Group
+  const usComplianceGroup = [
+    { label: "EIN Registration", href: "/us/services/compliance/ein-registration", order: 0 },
+    { label: "State Tax Registration", href: "/us/services/compliance/state-tax-registration", order: 1 },
+    { label: "Business License", href: "/us/services/compliance/business-license", order: 2 },
+  ];
+
+  for (const item of usComplianceGroup) {
+    await prisma.navbarItem.create({
+      data: {
+        label: item.label,
+        href: item.href,
+        order: item.order,
+        type: NavbarItemType.LINK,
+        region: Region.US,
+        parentId: startBusinessUS.id,
+        groupLabel: "Compliance and Licensing",
+      },
+    });
+  }
+
+  // Other top-level items for US
+  await prisma.navbarItem.create({
+    data: {
+      label: "Home",
+      href: "/us",
+      order: 1,
+      type: NavbarItemType.LINK,
+      region: Region.US,
+    },
+  });
+
+  await prisma.navbarItem.create({
+    data: {
+      label: "About",
+      href: "/us/about",
+      order: 2,
+      type: NavbarItemType.LINK,
+      region: Region.US,
+    },
+  });
+
+  await prisma.navbarItem.create({
+    data: {
+      label: "Login",
+      href: "/login",
+      order: 3,
+      type: NavbarItemType.BUTTON,
+      isLoginLink: true,
+      region: Region.US,
+    },
+  });
 }
 
 async function seedServiceCatalog() {

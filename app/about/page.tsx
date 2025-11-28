@@ -1,5 +1,5 @@
 import { Region, PageKey } from "@prisma/client";
-import { Navbar } from "@/components/navigation/navbar";
+import { NavbarServer } from "@/components/navigation/navbar-server";
 import { getStaticPage } from "@/lib/queries";
 import { RichContent } from "@/components/rich-text/rich-content";
 import type { RichTextDocument } from "@/types/rich-text";
@@ -10,7 +10,7 @@ export default async function AboutPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar region={Region.INDIA} />
+      <NavbarServer region={Region.INDIA} />
       <main className="mx-auto w-full max-w-3xl px-6 py-12 space-y-6">
         <p className="text-xs font-semibold uppercase tracking-[0.35em] text-indigo-500">About</p>
         <h1 className="text-4xl font-semibold text-zinc-900">{page?.title ?? "About Taxlegit India"}</h1>

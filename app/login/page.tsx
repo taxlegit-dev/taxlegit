@@ -18,11 +18,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const callbackUrl = Array.isArray(callbackUrlParam) ? callbackUrlParam[0] : callbackUrlParam;
 
   // Redirect based on role
-  if (session?.user?.role === "ADMIN") {
-    redirect("/admin");
-  }
-  if (session?.user?.role === "USER") {
-    redirect("/dashboard");
+  if (session?.user) {
+    if (session.user.role === "ADMIN") {
+      redirect("/select-region");
+    } else if (session.user.role === "USER") {
+      redirect("/dashboard");
+    }
   }
 
   return (

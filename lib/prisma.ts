@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -13,14 +12,9 @@ if (!connectionString) {
   );
 }
 
-const adapter = new PrismaPg({
-  connectionString,
-});
-
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    adapter,
     // ⛔ query logs removed to stop spam
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
   });

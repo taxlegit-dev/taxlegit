@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Region } from "@prisma/client";
-import { Navbar } from "@/components/navigation/navbar";
+import { NavbarServer } from "@/components/navigation/navbar-server";
 import { getServiceBySlugs } from "@/lib/queries";
 import { RichContent } from "@/components/rich-text/rich-content";
 import type { RichTextDocument } from "@/types/rich-text";
@@ -22,7 +22,7 @@ export async function ServiceDetail({ region, regionPrefix, categorySlug, servic
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar region={region} />
+      <NavbarServer region={region} />
       <main className="mx-auto w-full max-w-4xl px-6 py-12 space-y-8">
         <div className="space-y-3">
           <Link href={`${regionPrefix}/services/${categorySlug}`} className="text-sm text-indigo-600">
