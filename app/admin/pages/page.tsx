@@ -44,13 +44,13 @@ export default async function AdminPagesPage({ searchParams }: AdminPagesPagePro
           region={selectedRegion === Region.US ? "US" : "INDIA"}
           pageKey="HOME"
           title={home?.title ?? "Home"}
-          content={home?.content as RichTextDocument | undefined}
+          content={home?.content ? (typeof home.content === 'string' ? JSON.parse(home.content) : home.content) : undefined}
         />
         <PageForm
           region={selectedRegion === Region.US ? "US" : "INDIA"}
           pageKey="ABOUT"
           title={about?.title ?? "About"}
-          content={about?.content as RichTextDocument | undefined}
+          content={about?.content ? (typeof about.content === 'string' ? JSON.parse(about.content) : about.content) : undefined}
         />
       </div>
     </div>

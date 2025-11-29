@@ -56,7 +56,10 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
   });
 
   return (
-    <form onSubmit={onSubmit} className="w-full space-y-4 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
+    <form
+      onSubmit={onSubmit}
+      className="w-full space-y-4 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm"
+    >
       <div className="space-y-1">
         <label className="text-sm font-medium text-zinc-800" htmlFor="email">
           Email
@@ -68,7 +71,9 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
           placeholder="admin@taxlegit.com"
           {...register("email")}
         />
-        {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
+        {errors.email && (
+          <p className="text-sm text-red-500">{errors.email.message}</p>
+        )}
       </div>
       <div className="space-y-1">
         <label className="text-sm font-medium text-zinc-800" htmlFor="password">
@@ -81,9 +86,15 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
           placeholder="••••••••"
           {...register("password")}
         />
-        {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
+        {errors.password && (
+          <p className="text-sm text-red-500">{errors.password.message}</p>
+        )}
       </div>
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+          {error}
+        </p>
+      )}
       <button
         type="submit"
         disabled={isPending}
@@ -92,12 +103,14 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
         {isPending ? "Signing in..." : "Sign in"}
       </button>
       <p className="text-center text-xs text-zinc-500">
-        Don't have an account?{" "}
-        <Link href="/signup" className="font-semibold text-indigo-600 hover:text-indigo-500">
+        Don&apos;t have an account?{" "}
+        <Link
+          href="/signup"
+          className="font-semibold text-indigo-600 hover:text-indigo-500"
+        >
           Sign up
         </Link>
       </p>
     </form>
   );
 }
-

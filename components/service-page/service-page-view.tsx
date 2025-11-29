@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ServicePageSection } from "@prisma/client";
+import { EditorJsRenderer } from "@/components/rich-text/editorjs-renderer";
+import type { OutputData } from "@editorjs/editorjs";
 
 type ServicePageViewProps = {
   sections: ServicePageSection[];
@@ -101,14 +103,38 @@ export function ServicePageView({ sections, region }: ServicePageViewProps) {
             </h2>
 
             {/* Content */}
-            <div
-              className={`prose prose-lg max-w-none ${
-                isIndia
-                  ? "prose-slate prose-headings:text-slate-900 prose-p:text-slate-700"
-                  : "prose-invert prose-slate prose-headings:text-white prose-p:text-slate-300"
-              }`}
-              dangerouslySetInnerHTML={{ __html: section.content }}
-            />
+            {(() => {
+              // Try to parse as Editor.js JSON, fallback to HTML
+              let editorData: OutputData | null = null;
+              try {
+                const parsed = JSON.parse(section.content);
+                if (parsed && typeof parsed === "object" && "blocks" in parsed) {
+                  editorData = parsed as OutputData;
+                }
+              } catch {
+                // Not JSON, treat as HTML
+              }
+
+              if (editorData) {
+                return (
+                  <EditorJsRenderer
+                    data={editorData}
+                    theme={isIndia ? "light" : "dark"}
+                  />
+                );
+              } else {
+                return (
+                  <div
+                    className={`prose prose-lg max-w-none ${
+                      isIndia
+                        ? "prose-slate prose-headings:text-slate-900 prose-p:text-slate-700"
+                        : "prose-invert prose-slate prose-headings:text-white prose-p:text-slate-300"
+                    }`}
+                    dangerouslySetInnerHTML={{ __html: section.content }}
+                  />
+                );
+              }
+            })()}
           </div>
         ))}
       </div>

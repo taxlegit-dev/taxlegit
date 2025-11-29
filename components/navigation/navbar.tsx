@@ -15,12 +15,15 @@ export async function Navbar({ region }: NavbarProps) {
   });
 
   const mappedRegion = toSupportedRegion(region);
-  const regionPrefix = region === Region.US ? "/us" : "";
+  // const regionPrefix = region === Region.US ? "/us" : "";
 
   return (
     <header className="border-b border-zinc-100 bg-white/80 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-        <Link href={region === Region.US ? "/us" : "/"} className="text-lg font-semibold tracking-tight text-zinc-900">
+        <Link
+          href={region === Region.US ? "/us" : "/"}
+          className="text-lg font-semibold tracking-tight text-zinc-900"
+        >
           Taxlegit
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-600 md:flex">
@@ -53,7 +56,11 @@ export async function Navbar({ region }: NavbarProps) {
               <Link
                 key={item.id}
                 href={item.href ?? "#"}
-                className={`text-sm ${item.isLoginLink ? "rounded-full bg-indigo-600 px-3 py-1 text-white" : "text-zinc-600 transition hover:text-zinc-900"}`}
+                className={`text-sm ${
+                  item.isLoginLink
+                    ? "rounded-full bg-indigo-600 px-3 py-1 text-white"
+                    : "text-zinc-600 transition hover:text-zinc-900"
+                }`}
               >
                 {item.label}
               </Link>
@@ -73,4 +80,3 @@ export async function Navbar({ region }: NavbarProps) {
     </header>
   );
 }
-

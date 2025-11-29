@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { Region, ContentStatus } from "@prisma/client";
+import { Region, ContentStatus, Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
@@ -16,7 +16,9 @@ const servicePageSchema = z.object({
   navbarItemId: z.string().min(1, "Navbar item is required"),
   region: z.enum(["INDIA", "US"]),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
-  sections: z.array(servicePageSectionSchema).min(1, "At least one section is required"),
+  sections: z
+    .array(servicePageSectionSchema)
+    .min(1, "At least one section is required"),
 });
 
 export async function GET(request: Request) {
@@ -30,7 +32,7 @@ export async function GET(request: Request) {
   const region = searchParams.get("region");
   const navbarItemId = searchParams.get("navbarItemId");
 
-  const where: any = {};
+  const where: Prisma.ServicePageWhereInput = {};
   if (region) {
     where.region = region === "US" ? Region.US : Region.INDIA;
   }
@@ -63,11 +65,16 @@ export async function POST(request: Request) {
     const parsed = servicePageSchema.safeParse(payload);
 
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json(
+        { error: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
 
     const region = parsed.data.region === "US" ? Region.US : Region.INDIA;
-    const status = parsed.data.status ? (parsed.data.status as ContentStatus) : ContentStatus.DRAFT;
+    const status = parsed.data.status
+      ? (parsed.data.status as ContentStatus)
+      : ContentStatus.DRAFT;
 
     // Check if service page already exists
     const existing = await prisma.servicePage.findUnique({
@@ -128,16 +135,14 @@ export async function POST(request: Request) {
 
       return NextResponse.json({ servicePage });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating/updating service page:", error);
-    return NextResponse.json(
-      { error: error.message || "Failed to save service page" },
-      { status: 500 }
-    );
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to save service page";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
 export async function PUT(request: Request) {
-  return POST(request); // Same logic for update
+  return POST(request);
 }
-

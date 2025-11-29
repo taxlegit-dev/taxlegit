@@ -6,8 +6,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createBlogSchema } from "@/lib/validators";
-import { TipTapEditor } from "@/components/editor/tiptap-editor";
-import type { RichTextDocument } from "@/types/rich-text";
+import { EditorJsEditor } from "@/components/editor/editorjs-editor";
+import type { OutputData } from "@editorjs/editorjs";
 
 const blogFormSchema = createBlogSchema.extend({
   tags: z.string().optional(),
@@ -22,7 +22,7 @@ type BlogFormProps = {
 export function BlogForm({ region }: BlogFormProps) {
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
-  const [editorContent, setEditorContent] = useState<RichTextDocument | null>(null);
+  const [editorContent, setEditorContent] = useState<OutputData | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -57,7 +57,7 @@ export function BlogForm({ region }: BlogFormProps) {
                 .map((tag) => tag.trim())
                 .filter(Boolean)
             : [],
-          content: editorContent,
+          content: editorContent ? JSON.stringify(editorContent) : "",
         }),
       });
 
@@ -121,7 +121,26 @@ export function BlogForm({ region }: BlogFormProps) {
       </div>
       <div className="space-y-2">
         <label className="text-sm font-semibold text-zinc-800">Content</label>
-        <TipTapEditor value={editorContent ?? undefined} onChange={setEditorContent} placeholder="Write your article" />
+        <EditorJsEditor 
+          value={editorContent ?? undefined} 
+          onChange={setEditorContent} 
+          placeholder="Write your article"
+          onImageUpload={async (file) => {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("region", region);
+            const response = await fetch("/api/admin/upload", {
+              method: "POST",
+              body: formData,
+            });
+            const result = await response.json();
+            if (!response.ok) {
+              throw new Error(result.error || "Upload failed");
+            }
+            return result.url;
+          }}
+          region={region}
+        />
       </div>
       <input type="hidden" value={region} {...register("region")} />
       <button

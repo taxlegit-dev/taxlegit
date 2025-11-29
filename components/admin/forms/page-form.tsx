@@ -2,20 +2,20 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { RichTextDocument } from "@/types/rich-text";
-import { TipTapEditor } from "@/components/editor/tiptap-editor";
+import { EditorJsEditor } from "@/components/editor/editorjs-editor";
+import type { OutputData } from "@editorjs/editorjs";
 
 type PageFormProps = {
   region: "INDIA" | "US";
   pageKey: "HOME" | "ABOUT";
   title: string;
-  content?: RichTextDocument;
+  content?: OutputData;
 };
 
 export function PageForm({ region, pageKey, title, content }: PageFormProps) {
   const router = useRouter();
   const [pageTitle, setPageTitle] = useState(title);
-  const [editorContent, setEditorContent] = useState<RichTextDocument | undefined>(content);
+  const [editorContent, setEditorContent] = useState<OutputData | undefined>(content);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -31,7 +31,7 @@ export function PageForm({ region, pageKey, title, content }: PageFormProps) {
           key: pageKey,
           region,
           title: pageTitle,
-          content: editorContent,
+          content: editorContent ? JSON.stringify(editorContent) : "",
         }),
       });
 
@@ -59,7 +59,26 @@ export function PageForm({ region, pageKey, title, content }: PageFormProps) {
       </div>
       <div className="space-y-2">
         <label className="text-sm font-semibold text-slate-800">Content</label>
-        <TipTapEditor value={editorContent} onChange={setEditorContent} placeholder="Compose region-specific copy" />
+        <EditorJsEditor 
+          value={editorContent} 
+          onChange={setEditorContent} 
+          placeholder="Compose region-specific copy"
+          onImageUpload={async (file) => {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("region", region);
+            const response = await fetch("/api/admin/upload", {
+              method: "POST",
+              body: formData,
+            });
+            const result = await response.json();
+            if (!response.ok) {
+              throw new Error(result.error || "Upload failed");
+            }
+            return result.url;
+          }}
+          region={region}
+        />
       </div>
       <button
         type="button"

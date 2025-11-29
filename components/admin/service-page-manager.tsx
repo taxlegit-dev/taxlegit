@@ -1,12 +1,44 @@
 "use client";
 
-import React, { useState, useTransition, useEffect, useMemo } from "react";
+import React, { useState, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { NavbarItem, ServicePage, ServicePageSection } from "@prisma/client";
-import { QuillEditor } from "./quill-editor";
+import type {
+  NavbarItem,
+  ServicePage,
+  ServicePageSection,
+} from "@prisma/client";
+import dynamic from "next/dynamic";
+import type { OutputData } from "@editorjs/editorjs";
+
+// Dynamically import EditorJsEditor to avoid SSR issues
+const EditorJsEditor = dynamic(
+  () => import("@/components/editor/editorjs-editor").then((mod) => ({ default: mod.EditorJsEditor })),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="rounded-xl border border-slate-200 bg-white p-8 min-h-[300px] flex items-center justify-center text-slate-400">
+        Loading editor...
+      </div>
+    ),
+  }
+);
+
+// Helper function to parse Editor.js JSON from string
+function tryParseEditorJson(content: string): OutputData | null {
+  try {
+    const parsed = JSON.parse(content);
+    // Check if it looks like Editor.js format
+    if (parsed && typeof parsed === "object" && "blocks" in parsed) {
+      return parsed as OutputData;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 type ServicePageWithSections = ServicePage & {
   sections: ServicePageSection[];
@@ -44,14 +76,12 @@ export function ServicePageManager({
   navItems,
   selectedNavbarItemId,
   existingServicePage,
-  navbarItem,
   allServicePages = [],
 }: ServicePageManagerProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
-  const [uploadingImages, setUploadingImages] = useState<Record<number, boolean>>({});
 
   const selectedItemId = selectedNavbarItemId || "";
 
@@ -63,7 +93,7 @@ export function ServicePageManager({
           sections: existingServicePage.sections.map((s) => ({
             id: s.id,
             title: s.title,
-            content: s.content,
+            content: s.content, // Will be parsed in the editor component
             order: s.order,
           })),
         }
@@ -90,7 +120,7 @@ export function ServicePageManager({
         sections: existingServicePage.sections.map((s) => ({
           id: s.id,
           title: s.title,
-          content: s.content,
+          content: s.content, // Will be parsed in the editor component
           order: s.order,
         })),
       });
@@ -105,7 +135,8 @@ export function ServicePageManager({
   const handleNavbarItemSelect = (itemId: string) => {
     const next = new URLSearchParams(searchParams?.toString() ?? "");
     next.set("navbarItemId", itemId);
-    const regionParam = searchParams?.get("region") || (region === "US" ? "US" : "INDIA");
+    const regionParam =
+      searchParams?.get("region") || (region === "US" ? "US" : "INDIA");
     next.set("region", regionParam);
     router.push(`/admin/service-pages?${next.toString()}`);
   };
@@ -116,19 +147,21 @@ export function ServicePageManager({
     router.push(`/admin/service-pages?${next.toString()}`);
   };
 
-
   const handleSubmit = form.handleSubmit((data) => {
     startTransition(async () => {
       setMessage(null);
 
       // Validate sections
-      const validSections = data.sections.filter((s) => s.title.trim() && s.content.trim());
+      const validSections = data.sections.filter(
+        (s) => s.title.trim() && s.content.trim()
+      );
       if (validSections.length === 0) {
         setMessage("Please add at least one section with title and content");
         return;
       }
 
-      const finalNavbarItemId = data.navbarItemId || selectedItemId || selectedNavbarItemId;
+      const finalNavbarItemId =
+        data.navbarItemId || selectedItemId || selectedNavbarItemId;
       if (!finalNavbarItemId) {
         setMessage("Please select a service page first");
         return;
@@ -160,7 +193,9 @@ export function ServicePageManager({
         if (!response.ok) {
           const errorMsg =
             result.error?.message ||
-            (typeof result.error === "string" ? result.error : JSON.stringify(result.error)) ||
+            (typeof result.error === "string"
+              ? result.error
+              : JSON.stringify(result.error)) ||
             "Failed to save service page";
           setMessage(errorMsg);
           return;
@@ -181,13 +216,18 @@ export function ServicePageManager({
     return (
       <div className="space-y-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">Select a Service Page</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-4">
+            Select a Service Page
+          </h2>
           <p className="text-sm text-slate-600 mb-6">
-            Choose a navbar item to create or edit its service page with sections
+            Choose a navbar item to create or edit its service page with
+            sections
           </p>
           <div className="space-y-2">
             {navItems.map((item) => {
-              const hasServicePage = allServicePages.some((sp) => sp.navbarItemId === item.id);
+              const hasServicePage = allServicePages.some(
+                (sp) => sp.navbarItemId === item.id
+              );
               return (
                 <button
                   key={item.id}
@@ -196,8 +236,12 @@ export function ServicePageManager({
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-slate-900">{item.label}</div>
-                      <div className="text-xs text-slate-500 mt-1">{item.href}</div>
+                      <div className="font-semibold text-slate-900">
+                        {item.label}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">
+                        {item.href}
+                      </div>
                     </div>
                     {hasServicePage && (
                       <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
@@ -214,7 +258,9 @@ export function ServicePageManager({
     );
   }
 
-  const selectedItem = navItems.find((item) => item.id === (selectedItemId || selectedNavbarItemId));
+  const selectedItem = navItems.find(
+    (item) => item.id === (selectedItemId || selectedNavbarItemId)
+  );
 
   return (
     <div className="space-y-6">
@@ -254,11 +300,15 @@ export function ServicePageManager({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-semibold text-slate-900">
-                {existingServicePage ? "Edit Service Page" : "Create Service Page"}
+                {existingServicePage
+                  ? "Edit Service Page"
+                  : "Create Service Page"}
               </h2>
               {selectedItem && (
                 <p className="text-sm text-slate-600 mt-1">
-                  For: <span className="font-semibold">{selectedItem.label}</span> ({selectedItem.href})
+                  For:{" "}
+                  <span className="font-semibold">{selectedItem.label}</span> (
+                  {selectedItem.href})
                 </p>
               )}
             </div>
@@ -266,8 +316,18 @@ export function ServicePageManager({
               onClick={handleBackToNavbar}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
               </svg>
               Back to List
             </button>
@@ -275,7 +335,11 @@ export function ServicePageManager({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          <input type="hidden" {...form.register("navbarItemId")} value={selectedItemId || selectedNavbarItemId || ""} />
+          <input
+            type="hidden"
+            {...form.register("navbarItemId")}
+            value={selectedItemId || selectedNavbarItemId || ""}
+          />
 
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -283,7 +347,11 @@ export function ServicePageManager({
               <button
                 type="button"
                 onClick={() => {
-                  const maxOrder = Math.max(...fields.map((f, i) => form.watch(`sections.${i}.order`) || i + 1), 0);
+                  const currentSections = form.getValues("sections");
+                  const maxOrder = Math.max(
+                    ...currentSections.map((s, i) => s.order || i + 1),
+                    0
+                  );
                   append({
                     title: "",
                     content: "",
@@ -298,9 +366,14 @@ export function ServicePageManager({
             </div>
 
             {fields.map((field, index) => (
-              <div key={field.id} className="rounded-lg border border-slate-200 p-6 space-y-4">
+              <div
+                key={field.id}
+                className="rounded-lg border border-slate-200 p-6 space-y-4"
+              >
                 <div className="flex items-center justify-between">
-                  <h4 className="text-md font-semibold text-slate-900">Section {index + 1}</h4>
+                  <h4 className="text-md font-semibold text-slate-900">
+                    Section {index + 1}
+                  </h4>
                   {fields.length > 1 && (
                     <button
                       type="button"
@@ -330,12 +403,16 @@ export function ServicePageManager({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-900 mb-2">Order (1-10)</label>
+                    <label className="block text-sm font-semibold text-slate-900 mb-2">
+                      Order (1-10)
+                    </label>
                     <input
                       type="number"
                       min="1"
                       max="10"
-                      {...form.register(`sections.${index}.order`, { valueAsNumber: true })}
+                      {...form.register(`sections.${index}.order`, {
+                        valueAsNumber: true,
+                      })}
                       className="w-full rounded-lg border border-slate-200 px-4 py-2"
                     />
                     {form.formState.errors.sections?.[index]?.order && (
@@ -350,13 +427,32 @@ export function ServicePageManager({
                   <label className="block text-sm font-semibold text-slate-900 mb-2">
                     Content <span className="text-red-500">*</span>
                   </label>
-                  <QuillEditor
+                  <EditorJsEditor
                     key={`section-${field.id}-${index}`}
-                    value={field.content || ""}
+                    value={field.content ? (typeof field.content === "string" ? tryParseEditorJson(field.content) : field.content) : undefined}
                     onChange={(value) => {
-                      form.setValue(`sections.${index}.content`, value, { shouldDirty: true, shouldValidate: false });
+                      // Store as JSON string
+                      form.setValue(`sections.${index}.content`, JSON.stringify(value), {
+                        shouldDirty: true,
+                        shouldValidate: false,
+                      });
                     }}
                     placeholder="Enter section content..."
+                    onImageUpload={async (file) => {
+                      const formData = new FormData();
+                      formData.append("file", file);
+                      formData.append("region", region);
+                      const response = await fetch("/api/admin/upload", {
+                        method: "POST",
+                        body: formData,
+                      });
+                      const result = await response.json();
+                      if (!response.ok) {
+                        throw new Error(result.error || "Upload failed");
+                      }
+                      return result.url;
+                    }}
+                    region={region}
                   />
                   {form.formState.errors.sections?.[index]?.content && (
                     <p className="text-xs text-red-600 mt-1">
@@ -364,7 +460,6 @@ export function ServicePageManager({
                     </p>
                   )}
                 </div>
-
               </div>
             ))}
           </div>
@@ -374,11 +469,14 @@ export function ServicePageManager({
             disabled={isPending}
             className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-white font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isPending ? "Saving..." : existingServicePage ? "Update Service Page" : "Create Service Page"}
+            {isPending
+              ? "Saving..."
+              : existingServicePage
+              ? "Update Service Page"
+              : "Create Service Page"}
           </button>
         </form>
       </div>
     </div>
   );
 }
-

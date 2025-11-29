@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { NavbarItemType, Region } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { createNavItemSchema, updateNavItemSchema, reorderNavItemsSchema } from "@/lib/validators";
+import {
+  createNavItemSchema,
+  updateNavItemSchema,
+  reorderNavItemsSchema,
+} from "@/lib/validators";
 
 const navTypeMap: Record<"LINK" | "DROPDOWN" | "BUTTON", NavbarItemType> = {
   LINK: NavbarItemType.LINK,
@@ -54,7 +58,10 @@ export async function POST(request: Request) {
   const parsed = createNavItemSchema.safeParse(payload);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json(
+      { error: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
 
   // Validate parent exists if parentId is provided
@@ -64,11 +71,19 @@ export async function POST(request: Request) {
     });
 
     if (!parent) {
-      return NextResponse.json({ error: "Parent item not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Parent item not found" },
+        { status: 404 }
+      );
     }
 
-    if (parent.region !== (parsed.data.region === "US" ? Region.US : Region.INDIA)) {
-      return NextResponse.json({ error: "Parent item must be in the same region" }, { status: 400 });
+    if (
+      parent.region !== (parsed.data.region === "US" ? Region.US : Region.INDIA)
+    ) {
+      return NextResponse.json(
+        { error: "Parent item must be in the same region" },
+        { status: 400 }
+      );
     }
   }
 
@@ -94,6 +109,18 @@ export async function POST(request: Request) {
   return NextResponse.json({ item });
 }
 
+// Define a proper type for update data
+type UpdateData = {
+  label?: string;
+  href?: string;
+  order?: number;
+  type?: NavbarItemType;
+  isLoginLink?: boolean;
+  groupLabel?: string | null;
+  isActive?: boolean;
+  parent?: { connect: { id: string } } | { disconnect: boolean };
+};
+
 // PUT - Update a navbar item
 export async function PUT(request: Request) {
   const session = await auth();
@@ -106,7 +133,10 @@ export async function PUT(request: Request) {
   const parsed = updateNavItemSchema.safeParse(payload);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json(
+      { error: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
 
   // Check if item exists
@@ -125,16 +155,25 @@ export async function PUT(request: Request) {
     });
 
     if (!parent) {
-      return NextResponse.json({ error: "Parent item not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Parent item not found" },
+        { status: 404 }
+      );
     }
 
     // Prevent circular references
     if (parsed.data.parentId === parsed.data.id) {
-      return NextResponse.json({ error: "Item cannot be its own parent" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Item cannot be its own parent" },
+        { status: 400 }
+      );
     }
 
     // Check if parent is a descendant (prevent deep nesting)
-    const checkDescendant = async (itemId: string, targetId: string): Promise<boolean> => {
+    const checkDescendant = async (
+      itemId: string,
+      targetId: string
+    ): Promise<boolean> => {
       const item = await prisma.navbarItem.findUnique({
         where: { id: itemId },
         include: { children: true },
@@ -148,11 +187,14 @@ export async function PUT(request: Request) {
     };
 
     if (await checkDescendant(parsed.data.id, parsed.data.parentId)) {
-      return NextResponse.json({ error: "Cannot set parent to a descendant" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Cannot set parent to a descendant" },
+        { status: 400 }
+      );
     }
   }
 
-  const updateData: any = {
+  const updateData: UpdateData = {
     label: parsed.data.label,
     href: parsed.data.href,
     order: parsed.data.order,
@@ -213,7 +255,10 @@ export async function DELETE(request: Request) {
     where: { id },
   });
 
-  return NextResponse.json({ success: true, message: "Item deleted successfully" });
+  return NextResponse.json({
+    success: true,
+    message: "Item deleted successfully",
+  });
 }
 
 // PATCH - Reorder navbar items
@@ -228,7 +273,10 @@ export async function PATCH(request: Request) {
   const parsed = reorderNavItemsSchema.safeParse(payload);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json(
+      { error: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
 
   // Update order for all items in a transaction
@@ -241,5 +289,8 @@ export async function PATCH(request: Request) {
     )
   );
 
-  return NextResponse.json({ success: true, message: "Items reordered successfully" });
+  return NextResponse.json({
+    success: true,
+    message: "Items reordered successfully",
+  });
 }

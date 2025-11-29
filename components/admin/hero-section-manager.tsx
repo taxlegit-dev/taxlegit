@@ -2,13 +2,25 @@
 
 import React, { useState, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { NavbarItem, PageHero } from "@prisma/client";
 
 type HeroWithNavItem = PageHero & {
   navbarItem: NavbarItem | null;
+};
+
+type IndiaHeroContent = {
+  benefits: string[];
+  partnerLogos?: string[];
+};
+
+type UsHeroContent = {
+  announcement?: string;
+  highlightedWords?: string[];
+  primaryCTA: { text: string; href?: string };
+  secondaryCTA?: { text: string; href?: string };
 };
 
 type HeroSectionManagerProps = {
@@ -39,10 +51,12 @@ const usHeroSchema = z.object({
     text: z.string(),
     href: z.string().optional(),
   }),
-  secondaryCTA: z.object({
-    text: z.string(),
-    href: z.string().optional(),
-  }).optional(),
+  secondaryCTA: z
+    .object({
+      text: z.string(),
+      href: z.string().optional(),
+    })
+    .optional(),
 });
 
 type IndiaHeroForm = z.infer<typeof indiaHeroSchema>;
@@ -53,7 +67,6 @@ export function HeroSectionManager({
   navItems,
   selectedNavbarItemId,
   existingHero,
-  navbarItem,
   allHeroes = [],
 }: HeroSectionManagerProps) {
   const router = useRouter();
@@ -62,25 +75,34 @@ export function HeroSectionManager({
   const [message, setMessage] = useState<string | null>(null);
   const selectedItemId = selectedNavbarItemId || "";
 
-  // Parse existing hero content
-  const existingContent = existingHero?.content as any;
-
   // India form
   const indiaForm = useForm<IndiaHeroForm>({
     resolver: zodResolver(indiaHeroSchema),
-    defaultValues: existingHero
-      ? {
-          navbarItemId: existingHero.navbarItemId,
-          title: existingHero.title,
-          benefits: existingContent?.benefits?.length > 0 ? existingContent.benefits : [""],
-          partnerLogos: existingContent?.partnerLogos || [],
-        }
-      : {
-          navbarItemId: selectedItemId || selectedNavbarItemId || "",
-          title: "",
-          benefits: [""],
-          partnerLogos: [],
-        },
+    defaultValues: {
+      navbarItemId: selectedItemId || selectedNavbarItemId || "",
+      title: "",
+      benefits: [""],
+      partnerLogos: [],
+    },
+  });
+
+  // US form
+  const usForm = useForm<UsHeroForm>({
+    resolver: zodResolver(usHeroSchema),
+    defaultValues: {
+      navbarItemId: selectedItemId || "",
+      headline: "",
+      description: "",
+      announcement: "",
+      highlightedWords: [],
+      primaryCTA: { text: "Get Started" },
+    },
+  });
+
+  // Use useWatch for benefits field to avoid React Compiler issues
+  const indiaBenefits = useWatch({
+    control: indiaForm.control,
+    name: "benefits",
   });
 
   // Update form values when existingHero or selectedItemId changes
@@ -93,8 +115,8 @@ export function HeroSectionManager({
 
     // Update form when existingHero changes (for edit mode)
     if (existingHero) {
-      const content = existingHero.content as any;
       if (region === "INDIA") {
+        const content = existingHero.content as IndiaHeroContent;
         indiaForm.reset({
           navbarItemId: existingHero.navbarItemId,
           title: existingHero.title,
@@ -102,6 +124,7 @@ export function HeroSectionManager({
           partnerLogos: content?.partnerLogos || [],
         });
       } else {
+        const content = existingHero.content as UsHeroContent;
         usForm.reset({
           navbarItemId: existingHero.navbarItemId,
           headline: existingHero.title,
@@ -132,35 +155,20 @@ export function HeroSectionManager({
         });
       }
     }
-  }, [existingHero, selectedItemId, selectedNavbarItemId, region]);
-
-  // US form
-  const usForm = useForm<UsHeroForm>({
-    resolver: zodResolver(usHeroSchema),
-    defaultValues: existingHero
-      ? {
-          navbarItemId: existingHero.navbarItemId,
-          headline: existingHero.title,
-          description: existingHero.description || "",
-          announcement: existingContent?.announcement || "",
-          highlightedWords: existingContent?.highlightedWords || [],
-          primaryCTA: existingContent?.primaryCTA || { text: "Get Started" },
-          secondaryCTA: existingContent?.secondaryCTA,
-        }
-      : {
-          navbarItemId: selectedItemId || "",
-          headline: "",
-          description: "",
-          announcement: "",
-          highlightedWords: [],
-          primaryCTA: { text: "Get Started" },
-        },
-  });
+  }, [
+    existingHero,
+    selectedItemId,
+    selectedNavbarItemId,
+    region,
+    indiaForm,
+    usForm,
+  ]);
 
   const handleNavbarItemSelect = (itemId: string) => {
     const next = new URLSearchParams(searchParams?.toString() ?? "");
     next.set("navbarItemId", itemId);
-    const regionParam = searchParams?.get("region") || (region === "US" ? "US" : "INDIA");
+    const regionParam =
+      searchParams?.get("region") || (region === "US" ? "US" : "INDIA");
     next.set("region", regionParam);
     router.push(`/admin/hero?${next.toString()}`);
   };
@@ -171,85 +179,87 @@ export function HeroSectionManager({
     router.push(`/admin/hero?${next.toString()}`);
   };
 
-  const handleEditHero = (navbarItemId: string) => {
-    const next = new URLSearchParams(searchParams?.toString() ?? "");
-    next.set("navbarItemId", navbarItemId);
-    const regionParam = searchParams?.get("region") || (region === "US" ? "US" : "INDIA");
-    next.set("region", regionParam);
-    router.push(`/admin/hero?${next.toString()}`);
-  };
-
   const handleIndiaSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    indiaForm.handleSubmit((data) => {
-      // Validate benefits have at least one non-empty item
-      const filteredBenefits = data.benefits.filter((b) => b.trim());
-      if (filteredBenefits.length === 0) {
-        setMessage("Please add at least one benefit");
-        return;
-      }
 
-      // Validate navbarItemId
-      const finalNavbarItemId = data.navbarItemId || selectedItemId || selectedNavbarItemId;
-      if (!finalNavbarItemId) {
-        setMessage("Please select a service page first");
-        return;
-      }
-
-      startTransition(async () => {
-        setMessage(null);
-        const payload = {
-          ...(existingHero?.id && { id: existingHero.id }),
-          navbarItemId: finalNavbarItemId,
-          region,
-          title: data.title.trim(),
-          content: {
-            benefits: filteredBenefits,
-            partnerLogos: data.partnerLogos || [],
-          },
-          status: "PUBLISHED" as const,
-        };
-
-        console.log("Submitting payload:", payload);
-
-        const url = "/api/admin/hero";
-        const method = existingHero ? "PUT" : "POST";
-
-        try {
-          const response = await fetch(url, {
-            method,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-
-          const result = await response.json();
-          console.log("Response:", result);
-
-          if (!response.ok) {
-            const errorMsg = result.error?.message || 
-                           (typeof result.error === 'string' ? result.error : JSON.stringify(result.error)) || 
-                           "Failed to save hero section";
-            setMessage(errorMsg);
-            return;
-          }
-
-          setMessage("Hero section saved successfully!");
-          setTimeout(() => {
-            // Go back to list view after successful save
-            handleBackToNavbar();
-          }, 1500);
-        } catch (error) {
-          setMessage("Network error. Please try again.");
-          console.error("Error saving hero:", error);
+    indiaForm.handleSubmit(
+      (data) => {
+        // Validate benefits have at least one non-empty item
+        const filteredBenefits = data.benefits.filter((b) => b.trim());
+        if (filteredBenefits.length === 0) {
+          setMessage("Please add at least one benefit");
+          return;
         }
-      });
-    }, (errors) => {
-      // Handle validation errors
-      console.error("Form validation errors:", errors);
-      const firstError = Object.values(errors)[0];
-      setMessage(firstError?.message?.toString() || "Please fill in all required fields correctly.");
-    })(e);
+
+        // Validate navbarItemId
+        const finalNavbarItemId =
+          data.navbarItemId || selectedItemId || selectedNavbarItemId;
+        if (!finalNavbarItemId) {
+          setMessage("Please select a service page first");
+          return;
+        }
+
+        startTransition(async () => {
+          setMessage(null);
+          const payload = {
+            ...(existingHero?.id && { id: existingHero.id }),
+            navbarItemId: finalNavbarItemId,
+            region,
+            title: data.title.trim(),
+            content: {
+              benefits: filteredBenefits,
+              partnerLogos: data.partnerLogos || [],
+            },
+            status: "PUBLISHED" as const,
+          };
+
+          console.log("Submitting payload:", payload);
+
+          const url = "/api/admin/hero";
+          const method = existingHero ? "PUT" : "POST";
+
+          try {
+            const response = await fetch(url, {
+              method,
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+            console.log("Response:", result);
+
+            if (!response.ok) {
+              const errorMsg =
+                result.error?.message ||
+                (typeof result.error === "string"
+                  ? result.error
+                  : JSON.stringify(result.error)) ||
+                "Failed to save hero section";
+              setMessage(errorMsg);
+              return;
+            }
+
+            setMessage("Hero section saved successfully!");
+            setTimeout(() => {
+              // Go back to list view after successful save
+              handleBackToNavbar();
+            }, 1500);
+          } catch (error) {
+            setMessage("Network error. Please try again.");
+            console.error("Error saving hero:", error);
+          }
+        });
+      },
+      (errors) => {
+        // Handle validation errors
+        console.error("Form validation errors:", errors);
+        const firstError = Object.values(errors)[0];
+        setMessage(
+          firstError?.message?.toString() ||
+            "Please fill in all required fields correctly."
+        );
+      }
+    )();
   };
 
   const handleUsSubmit = usForm.handleSubmit((data) => {
@@ -296,52 +306,11 @@ export function HeroSectionManager({
   if (!selectedItemId && !selectedNavbarItemId) {
     return (
       <div className="space-y-6">
-        {/* Existing Hero Sections List */}
-        {/* {allHeroes.length > 0 && (
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-slate-900 mb-4">Existing Hero Sections</h2>
-            <div className="grid gap-4 md:grid-cols-2">
-              {allHeroes.map((hero) => (
-                <div
-                  key={hero.id}
-                  className="rounded-lg border border-slate-200 p-4 hover:border-indigo-300 hover:shadow-md transition"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-slate-900">{hero.navbarItem?.label || "Unknown"}</h3>
-                      <p className="text-xs text-slate-500 mt-1">{hero.navbarItem?.href}</p>
-                      <p className="text-sm text-slate-600 mt-2 line-clamp-2">{hero.title}</p>
-                      <div className="flex items-center gap-2 mt-3">
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            hero.status === "PUBLISHED"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          {hero.status}
-                        </span>
-                        <span className="text-xs text-slate-400">
-                          {new Date(hero.updatedAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleEditHero(hero.navbarItemId)}
-                      className="ml-4 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-                    >
-                      Edit
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )} */}
-
         {/* Select Service Page */}
         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">Select a Service Page</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-4">
+            Select a Service Page
+          </h2>
           <p className="text-sm text-slate-600 mb-6">
             Choose a navbar item to create or edit its hero section
           </p>
@@ -356,8 +325,12 @@ export function HeroSectionManager({
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-slate-900">{item.label}</div>
-                      <div className="text-xs text-slate-500 mt-1">{item.href}</div>
+                      <div className="font-semibold text-slate-900">
+                        {item.label}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">
+                        {item.href}
+                      </div>
                     </div>
                     {hasHero && (
                       <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
@@ -374,7 +347,9 @@ export function HeroSectionManager({
     );
   }
 
-  const selectedItem = navItems.find((item) => item.id === (selectedItemId || selectedNavbarItemId));
+  const selectedItem = navItems.find(
+    (item) => item.id === (selectedItemId || selectedNavbarItemId)
+  );
 
   return (
     <div className="space-y-6">
@@ -418,7 +393,9 @@ export function HeroSectionManager({
               </h2>
               {selectedItem && (
                 <p className="text-sm text-slate-600 mt-1">
-                  For: <span className="font-semibold">{selectedItem.label}</span> ({selectedItem.href})
+                  For:{" "}
+                  <span className="font-semibold">{selectedItem.label}</span> (
+                  {selectedItem.href})
                 </p>
               )}
             </div>
@@ -426,8 +403,18 @@ export function HeroSectionManager({
               onClick={handleBackToNavbar}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
               </svg>
               Back to List
             </button>
@@ -436,27 +423,33 @@ export function HeroSectionManager({
 
         {region === "INDIA" ? (
           <form onSubmit={handleIndiaSubmit} className="space-y-6">
-            <input 
-              type="hidden" 
-              {...indiaForm.register("navbarItemId")} 
-              value={selectedItemId || selectedNavbarItemId || ""} 
+            <input
+              type="hidden"
+              {...indiaForm.register("navbarItemId")}
+              value={selectedItemId || selectedNavbarItemId || ""}
             />
 
             <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Title</label>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Title
+              </label>
               <input
                 {...indiaForm.register("title")}
                 className="w-full rounded-lg border border-slate-200 px-4 py-2"
                 placeholder="e.g., Limited Liability Partnership Registration"
               />
               {indiaForm.formState.errors.title && (
-                <p className="text-xs text-red-600 mt-1">{indiaForm.formState.errors.title.message}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {indiaForm.formState.errors.title.message}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Benefits</label>
-              {indiaForm.watch("benefits").map((_, index) => (
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Benefits
+              </label>
+              {indiaBenefits.map((_, index) => (
                 <div key={index} className="flex gap-2 mb-2">
                   <input
                     {...indiaForm.register(`benefits.${index}`)}
@@ -468,7 +461,10 @@ export function HeroSectionManager({
                       type="button"
                       onClick={() => {
                         const benefits = indiaForm.getValues("benefits");
-                        indiaForm.setValue("benefits", benefits.filter((_, i) => i !== index));
+                        indiaForm.setValue(
+                          "benefits",
+                          benefits.filter((_, i) => i !== index)
+                        );
                       }}
                       className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"
                     >
@@ -492,22 +488,27 @@ export function HeroSectionManager({
             <button
               type="submit"
               disabled={isPending}
-              onClick={(e) => {
-                console.log("India form button clicked");
-                console.log("Form values:", indiaForm.getValues());
-                console.log("Form errors:", indiaForm.formState.errors);
-              }}
               className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-white font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isPending ? "Saving..." : existingHero ? "Update Hero Section" : "Create Hero Section"}
+              {isPending
+                ? "Saving..."
+                : existingHero
+                ? "Update Hero Section"
+                : "Create Hero Section"}
             </button>
           </form>
         ) : (
           <form onSubmit={handleUsSubmit} className="space-y-6">
-            <input type="hidden" {...usForm.register("navbarItemId")} value={selectedItemId || selectedNavbarItemId} />
+            <input
+              type="hidden"
+              {...usForm.register("navbarItemId")}
+              value={selectedItemId || selectedNavbarItemId}
+            />
 
             <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Announcement Banner (Optional)</label>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Announcement Banner (Optional)
+              </label>
               <input
                 {...usForm.register("announcement")}
                 className="w-full rounded-lg border border-slate-200 px-4 py-2"
@@ -516,19 +517,25 @@ export function HeroSectionManager({
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Headline</label>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Headline
+              </label>
               <input
                 {...usForm.register("headline")}
                 className="w-full rounded-lg border border-slate-200 px-4 py-2"
                 placeholder="e.g., Boost Your Productivity, Simplify Your Life"
               />
               {usForm.formState.errors.headline && (
-                <p className="text-xs text-red-600 mt-1">{usForm.formState.errors.headline.message}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {usForm.formState.errors.headline.message}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Description</label>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Description
+              </label>
               <textarea
                 {...usForm.register("description")}
                 rows={3}
@@ -536,13 +543,17 @@ export function HeroSectionManager({
                 placeholder="Describe the service..."
               />
               {usForm.formState.errors.description && (
-                <p className="text-xs text-red-600 mt-1">{usForm.formState.errors.description.message}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {usForm.formState.errors.description.message}
+                </p>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-2">Primary CTA Text</label>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">
+                  Primary CTA Text
+                </label>
                 <input
                   {...usForm.register("primaryCTA.text")}
                   className="w-full rounded-lg border border-slate-200 px-4 py-2"
@@ -550,7 +561,9 @@ export function HeroSectionManager({
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-2">Primary CTA Link (Optional)</label>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">
+                  Primary CTA Link (Optional)
+                </label>
                 <input
                   {...usForm.register("primaryCTA.href")}
                   className="w-full rounded-lg border border-slate-200 px-4 py-2"
@@ -561,7 +574,9 @@ export function HeroSectionManager({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-2">Secondary CTA Text (Optional)</label>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">
+                  Secondary CTA Text (Optional)
+                </label>
                 <input
                   {...usForm.register("secondaryCTA.text")}
                   className="w-full rounded-lg border border-slate-200 px-4 py-2"
@@ -569,7 +584,9 @@ export function HeroSectionManager({
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-2">Secondary CTA Link (Optional)</label>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">
+                  Secondary CTA Link (Optional)
+                </label>
                 <input
                   {...usForm.register("secondaryCTA.href")}
                   className="w-full rounded-lg border border-slate-200 px-4 py-2"
@@ -583,7 +600,11 @@ export function HeroSectionManager({
               disabled={isPending}
               className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-white font-semibold hover:bg-indigo-700 disabled:opacity-50"
             >
-              {isPending ? "Saving..." : existingHero ? "Update Hero Section" : "Create Hero Section"}
+              {isPending
+                ? "Saving..."
+                : existingHero
+                ? "Update Hero Section"
+                : "Create Hero Section"}
             </button>
           </form>
         )}
@@ -591,4 +612,3 @@ export function HeroSectionManager({
     </div>
   );
 }
-

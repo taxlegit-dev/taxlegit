@@ -7,16 +7,20 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 
-const signupSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  contact: z.string().min(10, "Contact must be at least 10 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(6, "Confirm password must be at least 6 characters"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const signupSchema = z
+  .object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Invalid email address"),
+    contact: z.string().min(10, "Contact must be at least 10 characters"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z
+      .string()
+      .min(6, "Confirm password must be at least 6 characters"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 type SignupValues = z.infer<typeof signupSchema>;
 
@@ -69,7 +73,7 @@ export function SignupForm() {
         setTimeout(() => {
           router.push("/login");
         }, 2000);
-      } catch (err) {
+      } catch {
         setError("An error occurred. Please try again.");
       }
     });
@@ -79,7 +83,9 @@ export function SignupForm() {
     return (
       <div className="w-full space-y-4 rounded-2xl border border-green-200 bg-green-50 p-8 shadow-sm">
         <div className="text-center space-y-2">
-          <p className="text-lg font-semibold text-green-800">Signup Successful!</p>
+          <p className="text-lg font-semibold text-green-800">
+            Signup Successful!
+          </p>
           <p className="text-sm text-green-600">Redirecting to login page...</p>
         </div>
       </div>
@@ -87,7 +93,10 @@ export function SignupForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="w-full space-y-4 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
+    <form
+      onSubmit={onSubmit}
+      className="w-full space-y-4 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm"
+    >
       <div className="space-y-1">
         <label className="text-sm font-medium text-zinc-800" htmlFor="name">
           Name
@@ -99,7 +108,9 @@ export function SignupForm() {
           placeholder="Enter your name"
           {...register("name")}
         />
-        {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
+        {errors.name && (
+          <p className="text-sm text-red-500">{errors.name.message}</p>
+        )}
       </div>
       <div className="space-y-1">
         <label className="text-sm font-medium text-zinc-800" htmlFor="email">
@@ -112,7 +123,9 @@ export function SignupForm() {
           placeholder="your@email.com"
           {...register("email")}
         />
-        {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
+        {errors.email && (
+          <p className="text-sm text-red-500">{errors.email.message}</p>
+        )}
       </div>
       <div className="space-y-1">
         <label className="text-sm font-medium text-zinc-800" htmlFor="contact">
@@ -125,7 +138,9 @@ export function SignupForm() {
           placeholder="+91 1234567890"
           {...register("contact")}
         />
-        {errors.contact && <p className="text-sm text-red-500">{errors.contact.message}</p>}
+        {errors.contact && (
+          <p className="text-sm text-red-500">{errors.contact.message}</p>
+        )}
       </div>
       <div className="space-y-1">
         <label className="text-sm font-medium text-zinc-800" htmlFor="password">
@@ -138,10 +153,15 @@ export function SignupForm() {
           placeholder="••••••••"
           {...register("password")}
         />
-        {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
+        {errors.password && (
+          <p className="text-sm text-red-500">{errors.password.message}</p>
+        )}
       </div>
       <div className="space-y-1">
-        <label className="text-sm font-medium text-zinc-800" htmlFor="confirmPassword">
+        <label
+          className="text-sm font-medium text-zinc-800"
+          htmlFor="confirmPassword"
+        >
           Confirm Password
         </label>
         <input
@@ -151,9 +171,17 @@ export function SignupForm() {
           placeholder="••••••••"
           {...register("confirmPassword")}
         />
-        {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>}
+        {errors.confirmPassword && (
+          <p className="text-sm text-red-500">
+            {errors.confirmPassword.message}
+          </p>
+        )}
       </div>
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+          {error}
+        </p>
+      )}
       <button
         type="submit"
         disabled={isPending}
@@ -163,11 +191,13 @@ export function SignupForm() {
       </button>
       <p className="text-center text-xs text-zinc-500">
         Already have an account?{" "}
-        <Link href="/login" className="font-semibold text-indigo-600 hover:text-indigo-500">
+        <Link
+          href="/login"
+          className="font-semibold text-indigo-600 hover:text-indigo-500"
+        >
           Sign in
         </Link>
       </p>
     </form>
   );
 }
-
