@@ -112,6 +112,11 @@ function renderBlock(block: OutputData["blocks"][0], theme: "light" | "dark"): R
         withBackground?: boolean;
         stretched?: boolean;
       };
+      
+      // Get link from tune data
+      const tuneData = block.tunes?.imageLink as { url?: string } | undefined;
+      const linkUrl = tuneData?.url;
+
       const imageUrl = imageData.file?.url || imageData.url || "";
       const alignment = imageData.alignment || "center";
       const width = imageData.width || undefined;
@@ -126,11 +131,22 @@ function renderBlock(block: OutputData["blocks"][0], theme: "light" | "dark"): R
         border: imageData.withBorder ? "2px solid #e5e7eb" : "none",
         backgroundColor: imageData.withBackground ? "#f3f4f6" : "transparent",
         width: imageData.stretched ? "100%" : width ? `${width}px` : "auto",
+        cursor: linkUrl ? "pointer" : "default",
       };
+
+      const imageElement = (
+        <img src={imageUrl} alt={imageData.caption || ""} style={imageStyle} />
+      );
 
       return (
         <figure key={block.id} className="mb-4">
-          <img src={imageUrl} alt={imageData.caption || ""} style={imageStyle} />
+          {linkUrl ? (
+            <a href={linkUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", textDecoration: "none" }}>
+              {imageElement}
+            </a>
+          ) : (
+            imageElement
+          )}
           {imageData.caption && (
             <figcaption className={`text-sm text-center mt-2 ${textColor}`}>
               {imageData.caption}
@@ -154,11 +170,11 @@ function renderBlock(block: OutputData["blocks"][0], theme: "light" | "dark"): R
       return (
         <div key={block.id} className={`mb-4 grid ${gridCols} gap-4`}>
           <div
-            className={`p-4 border border-slate-200 rounded-lg ${textColor}`}
+            className={`p-4 ${textColor}`}
             dangerouslySetInnerHTML={{ __html: columnsData.leftContent || "" }}
           />
           <div
-            className={`p-4 border border-slate-200 rounded-lg ${textColor}`}
+            className={`p-4 ${textColor}`}
             dangerouslySetInnerHTML={{ __html: columnsData.rightContent || "" }}
           />
         </div>

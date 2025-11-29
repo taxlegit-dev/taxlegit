@@ -13,6 +13,7 @@ import ImageTool from "@editorjs/image";
 // Custom blocks
 import ColumnsBlock from "./editorjs-blocks/columns-block";
 import YouTubeVideoBlock from "./editorjs-blocks/youtube-video-block";
+import ImageLinkTune from "./editorjs-blocks/image-link-tune";
 
 type EditorJsEditorProps = {
   value?: OutputData | null;
@@ -86,6 +87,7 @@ export function EditorJsEditor({
         },
         image: {
           class: ImageTool as any,
+          tunes: ["imageLink"],
           config: onImageUpload
             ? {
                 uploader: {
@@ -110,6 +112,9 @@ export function EditorJsEditor({
                 withBackground: false,
                 stretched: false,
               },
+        },
+        imageLink: {
+          class: ImageLinkTune as any,
         },
         columns: {
           class: ColumnsBlock as any,

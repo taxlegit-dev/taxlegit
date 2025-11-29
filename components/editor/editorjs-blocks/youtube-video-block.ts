@@ -27,7 +27,7 @@ export default class YouTubeVideoBlock implements BlockTool {
     return true;
   }
 
-  constructor({ data, api, readOnly }: BlockToolConstructorOptions<YouTubeVideoData>) {
+  constructor({ data }: BlockToolConstructorOptions<YouTubeVideoData>) {
     this.data = {
       url: data?.url || "",
       caption: data?.caption || "",
