@@ -33,7 +33,7 @@ export default function HowDoWeWork() {
   ];
 
   return (
-    <section className="py-24 bg-white" id="how-we-work">
+    <section className="py-12 bg-white" id="how-we-work">
       <div className="max-w-7xl mx-auto px-6">
 
         {/* Section Title */}

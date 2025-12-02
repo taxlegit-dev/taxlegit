@@ -28,7 +28,7 @@ const features = [
 
 export default function WhyChooseTaxLegit() {
   return (
-    <section className="py-24 bg-white">
+    <section className="py-12 bg-white">
       <div className="max-w-7xl mx-auto px-6">
         {/* Heading */}
         <h2 className="text-center text-4xl md:text-5xl font-bold text-gray-900">

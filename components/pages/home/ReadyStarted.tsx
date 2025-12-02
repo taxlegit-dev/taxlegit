@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 export default function GetStartedSection() {
   return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8">
+    <section className="py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="bg-gradient-to-r from-gray-50 to-slate-100 rounded-2xl shadow-xl overflow-hidden border border-gray-200">
           <div className="px-8 py-12 md:p-16 flex flex-col md:flex-row items-center justify-between">
@@ -19,7 +19,7 @@ export default function GetStartedSection() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link 
-                  href="https://cleartax.in/filing?utm_ref=itr_2025_organic_CT_homepage_inpage_cta_productsforeveryone_Try+for+free" 
+                  href=""
                   target="_blank"
                   className="inline-block"
                 >
@@ -32,7 +32,7 @@ export default function GetStartedSection() {
                   Schedule a demo
                 </button>
               </div>
-              
+
             </div>
             
             {/* Rounded Image Container */}
