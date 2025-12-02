@@ -3,7 +3,7 @@ import { Building2, FileText, Heart, ArrowRight } from 'lucide-react';
 
 export default function TaxLegitHero() {
     return (
-        <div className="relative bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 px-4 sm:px-6 lg:px-8 overflow-hidden"
+        <div className="relative bg-white px-4 sm:px-6 lg:px-8 overflow-hidden grid items-center"
     style={{ minHeight: 'calc(100vh - 73px)' }}>
             {/* Background Decorative Elements */}
             <div className="absolute top-0 left-0 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
@@ -13,11 +13,6 @@ export default function TaxLegitHero() {
                 <div className="grid lg:grid-cols-2 gap-12 items-center">
                     {/* Left Content */}
                     <div className="space-y-8">
-                        {/* Stats Badge */}
-                        <div className="inline-flex items-center bg-white rounded-full px-6 py-3 shadow-lg border border-gray-100">
-                            <span className="text-green-600 font-bold text-xl mr-2">₹2,450.85 Cr</span>
-                            <span className="text-gray-600 text-sm">Business registered this year</span>
-                        </div>
 
                         {/* Main Heading */}
                         <div>
@@ -32,76 +27,6 @@ export default function TaxLegitHero() {
                                 Your trusted partner for hassle-free company incorporation and complete legal solutions.
                             </p>
                         </div>
-
-                        {/* Service Cards */}
-                        {/* <div className="grid sm:grid-cols-2 gap-4">
-                            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 group cursor-pointer">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <Building2 className="text-white" size={24} />
-                                    </div>
-                                    <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <ArrowRight className="text-blue-600" size={18} />
-                                    </div>
-                                </div>
-                                <h3 className="text-xl font-bold text-slate-800 mb-2">Company Registration</h3>
-                                <p className="text-sm text-gray-600 mb-4">Register your business in 7 days</p>
-                                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition-colors">
-                                    Register Now
-                                </button>
-                            </div>
-
-                            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 group cursor-pointer">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <Heart className="text-white" size={24} />
-                                    </div>
-                                    <div className="w-8 h-8 bg-pink-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <ArrowRight className="text-pink-600" size={18} />
-                                    </div>
-                                </div>
-                                <h3 className="text-xl font-bold text-slate-800 mb-2">NGO Registration</h3>
-                                <p className="text-sm text-gray-600 mb-4">Start your social mission today</p>
-                                <button className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-lg font-semibold transition-colors">
-                                    Start Now
-                                </button>
-                            </div>
-
-                            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 group cursor-pointer">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <FileText className="text-white" size={24} />
-                                    </div>
-                                    <div className="w-8 h-8 bg-purple-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <ArrowRight className="text-purple-600" size={18} />
-                                    </div>
-                                </div>
-                                <h3 className="text-xl font-bold text-slate-800 mb-2">Tax Filing Services</h3>
-                                <p className="text-sm text-gray-600 mb-4">Expert filing in 24 hours</p>
-                                <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition-colors">
-                                    File Now
-                                </button>
-                            </div>
-
-                            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 group cursor-pointer">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <svg className="text-white" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M9 11l3 3L22 4"></path>
-                                            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
-                                        </svg>
-                                    </div>
-                                    <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <ArrowRight className="text-green-600" size={18} />
-                                    </div>
-                                </div>
-                                <h3 className="text-xl font-bold text-slate-800 mb-2">Business Compliance</h3>
-                                <p className="text-sm text-gray-600 mb-4">Stay 100% compliant always</p>
-                                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors">
-                                    Get Started
-                                </button>
-                            </div>
-                        </div> */}
 
                         <div className="flex flex-wrap items-center gap-8 pt-4">
                             <div className="flex items-center gap-2">
