@@ -1,31 +1,33 @@
-'use client'
-import React, { useState } from 'react';
-import { Phone, MessageCircle, Star, Check, TrendingUp, Shield, Users } from 'lucide-react';
+"use client";
+import React, { useState } from "react";
+import { Phone, MessageCircle, Star } from "lucide-react";
 
 export default function IndiaHeroSection() {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    service: ''
+    name: "",
+    email: "",
+    phone: "",
+    service: "",
   });
 
   const handleSubmit = () => {
-    console.log('Form submitted:', formData);
-    alert('Thank you! We will contact you soon.');
+    console.log("Form submitted:", formData);
+    alert("Thank you! We will contact you soon.");
   };
 
- const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-  setFormData({
-    ...formData,
-    [e.target.name]: e.target.value,
-  });
-};
-
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50">
-
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -37,7 +39,7 @@ export default function IndiaHeroSection() {
                   ✨ Zoho Finance Authorized Partner
                 </span>
               </div>
-              
+
               <h1 className="text-4xl lg:text-6xl font-bold text-slate-900 leading-tight">
                 <span className="text-rose-400">Tax Worries?</span>
                 <br />
@@ -46,15 +48,20 @@ export default function IndiaHeroSection() {
                 <span className="text-slate-800">We are the </span>
                 <span className="text-slate-900 relative">
                   SOLUTION
-                  <svg className="absolute -right-12 top-0 w-10 h-10 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 3l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z"/>
+                  <svg
+                    className="absolute -right-12 top-0 w-10 h-10 text-amber-500"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M10 3l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z" />
                   </svg>
                 </span>
               </h1>
 
               <p className="text-lg text-gray-600 leading-relaxed">
-                Expert tax consultation and business solutions tailored for your success. 
-                Navigate complex tax regulations with confidence and maximize your savings.
+                Expert tax consultation and business solutions tailored for your
+                success. Navigate complex tax regulations with confidence and
+                maximize your savings.
               </p>
             </div>
 
@@ -80,7 +87,9 @@ export default function IndiaHeroSection() {
                 </div>
               </div>
               <div className="text-sm">
-                <div className="font-bold text-slate-900">1470+ Google Reviews</div>
+                <div className="font-bold text-slate-900">
+                  1470+ Google Reviews
+                </div>
                 <div className="text-gray-600">Trusted by thousands</div>
               </div>
             </div>
@@ -158,7 +167,9 @@ export default function IndiaHeroSection() {
                   <option value="">---Select Service---</option>
                   <option value="tax-filing">Tax Filing & Returns</option>
                   <option value="gst">GST Registration & Filing</option>
-                  <option value="business-registration">Business Registration</option>
+                  <option value="business-registration">
+                    Business Registration
+                  </option>
                   <option value="accounting">Accounting Services</option>
                   <option value="consultation">Tax Consultation</option>
                 </select>
@@ -183,7 +194,6 @@ export default function IndiaHeroSection() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Region } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { RegionSwitcher } from "@/components/navigation/region-switcher";
 import { toSupportedRegion } from "@/lib/regions";
 import Image from "next/image";
@@ -10,11 +9,6 @@ type NavbarProps = {
 };
 
 export async function Navbar({ region }: NavbarProps) {
-  const navItems = await prisma.navbarItem.findMany({
-    where: { region, isActive: true },
-    orderBy: { order: "asc" },
-  });
-
   const mappedRegion = toSupportedRegion(region);
 
   return (
@@ -25,16 +19,32 @@ export async function Navbar({ region }: NavbarProps) {
           href={region === Region.US ? "/us" : "/"}
           className="flex items-center gap-2.5"
         >
-          <svg
-            className="h-[42px] w-[42px]"
-            viewBox="0 0 50 50"
-            fill="none"
-          >
+          <svg className="h-[42px] w-[42px]" viewBox="0 0 50 50" fill="none">
             <rect x="10" y="4" width="30" height="3.5" fill="#DC2626" rx="1" />
-            <circle cx="15" cy="18" r="5.5" stroke="#DC2626" strokeWidth="2" fill="none" />
-            <circle cx="35" cy="18" r="5.5" stroke="#DC2626" strokeWidth="2" fill="none" />
+            <circle
+              cx="15"
+              cy="18"
+              r="5.5"
+              stroke="#DC2626"
+              strokeWidth="2"
+              fill="none"
+            />
+            <circle
+              cx="35"
+              cy="18"
+              r="5.5"
+              stroke="#DC2626"
+              strokeWidth="2"
+              fill="none"
+            />
             <rect x="23.5" y="13" width="3" height="10" fill="#DC2626" />
-            <path d="M10 32 L25 26 L40 32" stroke="#DC2626" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+            <path
+              d="M10 32 L25 26 L40 32"
+              stroke="#DC2626"
+              strokeWidth="2.5"
+              fill="none"
+              strokeLinecap="round"
+            />
           </svg>
           <span className="text-[26px] font-bold leading-none tracking-tight text-[#1a1a1a]">
             <Image
@@ -97,8 +107,18 @@ export async function Navbar({ region }: NavbarProps) {
 
         {/* Mobile Menu Button */}
         <button className="rounded-md p-2 text-gray-700 hover:bg-gray-100 lg:hidden">
-          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
           </svg>
         </button>
       </div>

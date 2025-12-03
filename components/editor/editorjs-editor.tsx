@@ -12,7 +12,6 @@ import ImageTool from "@editorjs/image";
 import Paragraph from "@editorjs/paragraph";
 
 // Custom blocks
-// import ColumnsBlock from "./editorjs-blocks/columns-block";
 import YouTubeVideoBlock from "./editorjs-blocks/youtube-video-block";
 import ColumnBlock from "./editorjs-blocks/column-block";
 import ImageLinkTune from "./editorjs-blocks/image-link-tune";
@@ -38,16 +37,14 @@ export function EditorJsEditor({
   onChange,
   placeholder = "Start writing...",
   onImageUpload,
-  region = "INDIA",
 }: EditorJsEditorProps) {
   const editorRef = useRef<EditorJS | null>(null);
   const holderRef = useRef<HTMLDivElement>(null);
-  const [isMounted, setIsMounted] = useState(false);
-  const [editorId] = useState(() => `editorjs-${Math.random().toString(36).substr(2, 9)}`);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  // Fix: Use useState(true) instead of useEffect to set mounted state
+  const [isMounted] = useState(true);
+  const [editorId] = useState(
+    () => `editorjs-${Math.random().toString(36).substr(2, 9)}`
+  );
 
   const handleImageUpload = useCallback(
     async (file: File): Promise<string> => {
@@ -68,15 +65,17 @@ export function EditorJsEditor({
     const editor = new EditorJS({
       holder: holderRef.current,
       placeholder: placeholder,
-      data: value && typeof value === 'object' && 'blocks' in value ? value : undefined,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data:
+        value && typeof value === "object" && "blocks" in value
+          ? value
+          : undefined,
       tools: {
         paragraph: {
-          class: Paragraph as any,
+          class: Paragraph as unknown as never,
           inlineToolbar: ["bold", "italic", "link", "fontSize", "textColor"],
         },
         header: {
-          class: Header as any,
+          class: Header as unknown as never,
           inlineToolbar: ["bold", "italic", "link", "fontSize", "textColor"],
           config: {
             placeholder: "Section title",
@@ -85,11 +84,11 @@ export function EditorJsEditor({
           },
         },
         list: {
-          class: List as any,
+          class: List as unknown as never,
           inlineToolbar: ["bold", "italic", "link", "fontSize", "textColor"],
         },
         table: {
-          class: Table as any,
+          class: Table as unknown as never,
           inlineToolbar: ["bold", "italic", "link", "fontSize", "textColor"],
           config: {
             rows: 2,
@@ -97,13 +96,13 @@ export function EditorJsEditor({
           },
         },
         fontSize: {
-          class: FontSizeInlineTool as any,
+          class: FontSizeInlineTool as unknown as never,
         },
         textColor: {
-          class: TextColorInlineTool as any,
+          class: TextColorInlineTool as unknown as never,
         },
         image: {
-          class: ImageTool as any,
+          class: ImageTool as unknown as never,
           tunes: ["imageLink"],
           config: onImageUpload
             ? {
@@ -131,20 +130,20 @@ export function EditorJsEditor({
               },
         },
         imageLink: {
-          class: ImageLinkTune as any,
+          class: ImageLinkTune as unknown as never,
         },
         youtube: {
-          class: YouTubeVideoBlock as any,
+          class: YouTubeVideoBlock as unknown as never,
         },
         column: {
-          class: ColumnBlock as any,
+          class: ColumnBlock as unknown as never,
           config: onImageUpload
             ? {
                 imageUploadHandler: handleImageUpload,
               }
             : undefined,
         },
-      } as any,
+      },
       onChange: async () => {
         if (editor) {
           try {
@@ -160,11 +159,13 @@ export function EditorJsEditor({
     });
 
     // Wait for editor to be ready
-    editor.isReady.then(() => {
-      editorRef.current = editor;
-    }).catch((error) => {
-      console.error("Editor initialization error:", error);
-    });
+    editor.isReady
+      .then(() => {
+        editorRef.current = editor;
+      })
+      .catch((error) => {
+        console.error("Editor initialization error:", error);
+      });
 
     return () => {
       if (editorRef.current && editorRef.current.destroy) {
@@ -172,11 +173,23 @@ export function EditorJsEditor({
         editorRef.current = null;
       }
     };
-  }, [isMounted, placeholder, onChange, handleImageUpload, onImageUpload]);
+  }, [
+    isMounted,
+    placeholder,
+    onChange,
+    handleImageUpload,
+    onImageUpload,
+    value,
+  ]);
 
   // Update editor content when value changes externally
   useEffect(() => {
-    if (!editorRef.current || !value || typeof value !== 'object' || !('blocks' in value)) {
+    if (
+      !editorRef.current ||
+      !value ||
+      typeof value !== "object" ||
+      !("blocks" in value)
+    ) {
       return;
     }
 
@@ -188,9 +201,9 @@ export function EditorJsEditor({
       try {
         // Wait for editor to be ready
         await editor.isReady;
-        
+
         // Check if save method exists
-        if (typeof editor.save !== 'function') {
+        if (typeof editor.save !== "function") {
           console.warn("Editor save method not available yet");
           return;
         }
@@ -198,14 +211,17 @@ export function EditorJsEditor({
         const currentData = await editor.save();
         const currentJson = JSON.stringify(currentData);
         const newJson = JSON.stringify(value);
-        
+
         if (currentJson !== newJson) {
           editor.render(value);
         }
-      } catch (error) {
+      } catch {
         // If save fails, try to render the new value directly
         try {
-          if (editorRef.current && typeof editorRef.current.render === 'function') {
+          if (
+            editorRef.current &&
+            typeof editorRef.current.render === "function"
+          ) {
             editorRef.current.render(value);
           }
         } catch (renderError) {

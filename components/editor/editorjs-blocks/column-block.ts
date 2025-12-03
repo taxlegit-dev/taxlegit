@@ -1,9 +1,9 @@
-/**
- * Column Block for Editor.js
- * Displays image on one side and text content (heading, description, points) on the other
- */
-
-import type { BlockTool, BlockToolConstructorOptions, BlockToolData } from "@editorjs/editorjs";
+import type {
+  BlockTool,
+  BlockToolConstructorOptions,
+  BlockToolData,
+  API,
+} from "@editorjs/editorjs";
 
 export interface ColumnBlockData extends BlockToolData {
   imageUrl: string;
@@ -23,6 +23,7 @@ export default class ColumnBlock implements BlockTool {
   private descriptionTextarea: HTMLTextAreaElement | null = null;
   private pointsContainer: HTMLElement | null = null;
   private imageUploadHandler?: (file: File) => Promise<string>;
+  private api: API;
 
   static get toolbox() {
     return {
@@ -35,9 +36,13 @@ export default class ColumnBlock implements BlockTool {
     return true;
   }
 
-  private api: any;
-
-  constructor({ data, api, config }: BlockToolConstructorOptions<ColumnBlockData> & { config?: { imageUploadHandler?: (file: File) => Promise<string> } }) {
+  constructor({
+    data,
+    api,
+    config,
+  }: BlockToolConstructorOptions<ColumnBlockData> & {
+    config?: { imageUploadHandler?: (file: File) => Promise<string> };
+  }) {
     this.data = {
       imageUrl: data?.imageUrl || "",
       imagePosition: data?.imagePosition || "left",
@@ -49,7 +54,9 @@ export default class ColumnBlock implements BlockTool {
     this.api = api;
 
     // Access image upload handler from config
-    const blockConfig = config as { imageUploadHandler?: (file: File) => Promise<string> } | undefined;
+    const blockConfig = config as
+      | { imageUploadHandler?: (file: File) => Promise<string> }
+      | undefined;
     if (blockConfig?.imageUploadHandler) {
       this.imageUploadHandler = blockConfig.imageUploadHandler;
     }
@@ -58,11 +65,12 @@ export default class ColumnBlock implements BlockTool {
   render(): HTMLElement {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add("column-block");
-    this.wrapper.style.cssText = "padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; margin: 10px 0;";
+    this.wrapper.style.cssText =
+      "padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; margin: 10px 0;";
 
     // Image section
     const imageSection = this.createImageSection();
-    
+
     // Text section
     const textSection = this.createTextSection();
 
@@ -77,7 +85,9 @@ export default class ColumnBlock implements BlockTool {
       gap: 20px;
       align-items: flex-start;
       margin-top: 15px;
-      flex-direction: ${this.data.imagePosition === "left" ? "row" : "row-reverse"};
+      flex-direction: ${
+        this.data.imagePosition === "left" ? "row" : "row-reverse"
+      };
     `;
 
     const imageColumn = document.createElement("div");
@@ -105,14 +115,16 @@ export default class ColumnBlock implements BlockTool {
 
     const imageLabel = document.createElement("label");
     imageLabel.textContent = "Image:";
-    imageLabel.style.cssText = "display: block; font-size: 12px; font-weight: 500; margin-bottom: 4px;";
+    imageLabel.style.cssText =
+      "display: block; font-size: 12px; font-weight: 500; margin-bottom: 4px;";
 
     // Image URL input
     this.imageUrlInput = document.createElement("input");
     this.imageUrlInput.type = "text";
     this.imageUrlInput.value = this.data.imageUrl;
     this.imageUrlInput.placeholder = "Image URL or upload file below";
-    this.imageUrlInput.style.cssText = "width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 8px;";
+    this.imageUrlInput.style.cssText =
+      "width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 8px;";
     this.imageUrlInput.addEventListener("input", () => {
       this.data.imageUrl = this.imageUrlInput?.value || "";
       this.updateImagePreview();
@@ -125,7 +137,8 @@ export default class ColumnBlock implements BlockTool {
     this.imageFileInput = document.createElement("input");
     this.imageFileInput.type = "file";
     this.imageFileInput.accept = "image/*";
-    this.imageFileInput.style.cssText = "width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;";
+    this.imageFileInput.style.cssText =
+      "width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;";
     this.imageFileInput.addEventListener("change", async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file && this.imageUploadHandler) {
@@ -154,7 +167,8 @@ export default class ColumnBlock implements BlockTool {
     // Image preview
     this.imagePreview = document.createElement("div");
     this.imagePreview.className = "image-preview";
-    this.imagePreview.style.cssText = "margin-top: 10px; border-radius: 4px; overflow: hidden;";
+    this.imagePreview.style.cssText =
+      "margin-top: 10px; border-radius: 4px; overflow: hidden;";
 
     imageSection.appendChild(imageLabel);
     imageSection.appendChild(this.imageUrlInput);
@@ -169,43 +183,51 @@ export default class ColumnBlock implements BlockTool {
 
   private createTextSection(): HTMLElement {
     const textSection = document.createElement("div");
-    textSection.style.cssText = "display: flex; flex-direction: column; gap: 10px;";
+    textSection.style.cssText =
+      "display: flex; flex-direction: column; gap: 10px;";
 
     // Heading
     const headingLabel = document.createElement("label");
     headingLabel.textContent = "Heading:";
-    headingLabel.style.cssText = "display: block; font-size: 12px; font-weight: 500;";
+    headingLabel.style.cssText =
+      "display: block; font-size: 12px; font-weight: 500;";
 
     this.headingInput = document.createElement("input");
     this.headingInput.type = "text";
     this.headingInput.value = this.data.heading;
     this.headingInput.placeholder = "Enter heading";
-    this.headingInput.style.cssText = "width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; font-weight: 600;";
+    this.headingInput.style.cssText =
+      "width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; font-weight: 600;";
 
     // Description
     const descriptionLabel = document.createElement("label");
     descriptionLabel.textContent = "Description:";
-    descriptionLabel.style.cssText = "display: block; font-size: 12px; font-weight: 500; margin-top: 8px;";
+    descriptionLabel.style.cssText =
+      "display: block; font-size: 12px; font-weight: 500; margin-top: 8px;";
 
     this.descriptionTextarea = document.createElement("textarea");
     this.descriptionTextarea.value = this.data.description;
     this.descriptionTextarea.placeholder = "Enter description";
     this.descriptionTextarea.rows = 4;
-    this.descriptionTextarea.style.cssText = "width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; resize: vertical; font-family: inherit;";
+    this.descriptionTextarea.style.cssText =
+      "width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; resize: vertical; font-family: inherit;";
 
     // Points
     const pointsLabel = document.createElement("label");
     pointsLabel.textContent = "Points:";
-    pointsLabel.style.cssText = "display: block; font-size: 12px; font-weight: 500; margin-top: 8px;";
+    pointsLabel.style.cssText =
+      "display: block; font-size: 12px; font-weight: 500; margin-top: 8px;";
 
     this.pointsContainer = document.createElement("div");
     this.pointsContainer.className = "points-container";
-    this.pointsContainer.style.cssText = "display: flex; flex-direction: column; gap: 6px;";
+    this.pointsContainer.style.cssText =
+      "display: flex; flex-direction: column; gap: 6px;";
 
     const addPointButton = document.createElement("button");
     addPointButton.textContent = "+ Add Point";
     addPointButton.type = "button";
-    addPointButton.style.cssText = "padding: 6px 12px; background: #4f46e5; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; margin-top: 8px;";
+    addPointButton.style.cssText =
+      "padding: 6px 12px; background: #4f46e5; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; margin-top: 8px;";
     addPointButton.addEventListener("click", () => {
       this.addPoint();
     });
@@ -225,7 +247,8 @@ export default class ColumnBlock implements BlockTool {
 
   private createPositionToggle(): HTMLElement {
     const toggleContainer = document.createElement("div");
-    toggleContainer.style.cssText = "display: flex; gap: 8px; align-items: center; margin-bottom: 10px; padding: 8px; background: #f5f5f5; border-radius: 4px;";
+    toggleContainer.style.cssText =
+      "display: flex; gap: 8px; align-items: center; margin-bottom: 10px; padding: 8px; background: #f5f5f5; border-radius: 4px;";
 
     const label = document.createElement("label");
     label.textContent = "Image Position:";
@@ -281,9 +304,12 @@ export default class ColumnBlock implements BlockTool {
   }
 
   private updateLayout() {
-    const layoutContainer = this.wrapper?.querySelector(".column-layout") as HTMLElement | null;
+    const layoutContainer = this.wrapper?.querySelector(
+      ".column-layout"
+    ) as HTMLElement | null;
     if (layoutContainer) {
-      layoutContainer.style.flexDirection = this.data.imagePosition === "left" ? "row" : "row-reverse";
+      layoutContainer.style.flexDirection =
+        this.data.imagePosition === "left" ? "row" : "row-reverse";
     }
   }
 
@@ -314,13 +340,15 @@ export default class ColumnBlock implements BlockTool {
 
     this.data.points.forEach((point, index) => {
       const pointItem = document.createElement("div");
-      pointItem.style.cssText = "display: flex; gap: 8px; align-items: flex-start;";
+      pointItem.style.cssText =
+        "display: flex; gap: 8px; align-items: flex-start;";
 
       const pointInput = document.createElement("input");
       pointInput.type = "text";
       pointInput.value = point;
       pointInput.placeholder = "Enter point";
-      pointInput.style.cssText = "flex: 1; padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;";
+      pointInput.style.cssText =
+        "flex: 1; padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;";
       pointInput.addEventListener("input", () => {
         this.data.points[index] = pointInput.value;
       });
@@ -328,7 +356,8 @@ export default class ColumnBlock implements BlockTool {
       const deleteButton = document.createElement("button");
       deleteButton.textContent = "×";
       deleteButton.type = "button";
-      deleteButton.style.cssText = "padding: 6px 10px; background: #ef4444; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; line-height: 1;";
+      deleteButton.style.cssText =
+        "padding: 6px 10px; background: #ef4444; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; line-height: 1;";
       deleteButton.addEventListener("click", () => {
         this.data.points.splice(index, 1);
         this.renderPoints();
@@ -342,7 +371,8 @@ export default class ColumnBlock implements BlockTool {
     if (this.data.points.length === 0) {
       const emptyMessage = document.createElement("p");
       emptyMessage.textContent = "No points added yet";
-      emptyMessage.style.cssText = "color: #999; font-size: 12px; font-style: italic; padding: 8px;";
+      emptyMessage.style.cssText =
+        "color: #999; font-size: 12px; font-style: italic; padding: 8px;";
       container.appendChild(emptyMessage);
     }
   }
@@ -351,7 +381,9 @@ export default class ColumnBlock implements BlockTool {
     this.data.points.push("");
     this.renderPoints();
     // Focus on the new input
-    const lastInput = this.pointsContainer?.querySelector("input:last-of-type") as HTMLInputElement;
+    const lastInput = this.pointsContainer?.querySelector(
+      "input:last-of-type"
+    ) as HTMLInputElement;
     if (lastInput) {
       setTimeout(() => lastInput.focus(), 0);
     }
@@ -377,4 +409,3 @@ export default class ColumnBlock implements BlockTool {
     };
   }
 }
-

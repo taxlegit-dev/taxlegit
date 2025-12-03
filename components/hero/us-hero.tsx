@@ -7,8 +7,23 @@ type UsHeroProps = {
   hero: PageHero;
 };
 
+interface HeroContent {
+  benefits?: string[];
+  partnerLogos?: string[];
+  announcement?: string;
+  highlightedWords?: string[];
+  primaryCTA?: {
+    text: string;
+    href?: string;
+  };
+  secondaryCTA?: {
+    text: string;
+    href?: string;
+  };
+}
+
 export function UsHero({ hero }: UsHeroProps) {
-  const content = hero.content as any;
+  const content = hero.content as HeroContent;
   const announcement = content?.announcement;
   const headline = hero.title;
   const highlightedWords = content?.highlightedWords || [];
@@ -24,10 +39,7 @@ export function UsHero({ hero }: UsHeroProps) {
 
     let text = headline;
     highlightedWords.forEach((word: string) => {
-      text = text.replace(
-        new RegExp(`\\b${word}\\b`, "gi"),
-        `**${word}**`
-      );
+      text = text.replace(new RegExp(`\\b${word}\\b`, "gi"), `**${word}**`);
     });
 
     const parts = text.split("**");
@@ -65,10 +77,22 @@ export function UsHero({ hero }: UsHeroProps) {
         {/* Announcement Banner */}
         {announcement && (
           <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-2 text-sm text-white shadow-lg">
-            <span className="rounded-full bg-purple-800 px-2 py-0.5 text-xs font-semibold">New</span>
+            <span className="rounded-full bg-purple-800 px-2 py-0.5 text-xs font-semibold">
+              New
+            </span>
             <span>{announcement}</span>
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </div>
         )}
@@ -104,7 +128,8 @@ export function UsHero({ hero }: UsHeroProps) {
 
       <style jsx>{`
         @keyframes blob {
-          0%, 100% {
+          0%,
+          100% {
             transform: translate(0, 0) scale(1);
           }
           33% {
@@ -127,4 +152,3 @@ export function UsHero({ hero }: UsHeroProps) {
     </section>
   );
 }
-

@@ -2,20 +2,24 @@
 
 import React from "react";
 import type { OutputData } from "@editorjs/editorjs";
-
+import Image from "next/image";
 interface EditorJsRendererProps {
   data: OutputData;
   theme?: "light" | "dark";
 }
 
-export function EditorJsRenderer({ data, theme = "light" }: EditorJsRendererProps) {
+export function EditorJsRenderer({
+  data,
+  theme = "light",
+}: EditorJsRendererProps) {
   if (!data?.blocks || data.blocks.length === 0) {
     return null;
   }
 
-  const baseClass = theme === "dark" 
-    ? "prose prose-invert prose-emerald max-w-none" 
-    : "prose prose-indigo max-w-none";
+  const baseClass =
+    theme === "dark"
+      ? "prose prose-invert prose-emerald max-w-none"
+      : "prose prose-indigo max-w-none";
 
   return (
     <div className={baseClass}>
@@ -28,7 +32,10 @@ export function EditorJsRenderer({ data, theme = "light" }: EditorJsRendererProp
   );
 }
 
-function renderBlock(block: OutputData["blocks"][0], theme: "light" | "dark"): React.ReactNode {
+function renderBlock(
+  block: OutputData["blocks"][0],
+  theme: "light" | "dark"
+): React.ReactNode {
   const textColor = theme === "dark" ? "text-slate-200" : "text-zinc-600";
   const headingColor = theme === "dark" ? "text-white" : "text-zinc-900";
 
@@ -68,14 +75,19 @@ function renderBlock(block: OutputData["blocks"][0], theme: "light" | "dark"): R
 
     case "list":
       const ListTag = block.data.style === "ordered" ? "ol" : "ul";
-      const listClass = block.data.style === "ordered" ? "list-decimal" : "list-disc";
+      const listClass =
+        block.data.style === "ordered" ? "list-decimal" : "list-disc";
       return (
         <ListTag
           key={block.id}
           className={`mb-4 pl-6 ${listClass} ${textColor}`}
         >
           {block.data.items?.map((item: string, idx: number) => (
-            <li key={idx} className="mb-1" dangerouslySetInnerHTML={{ __html: item }} />
+            <li
+              key={idx}
+              className="mb-1"
+              dangerouslySetInnerHTML={{ __html: item }}
+            />
           ))}
         </ListTag>
       );
@@ -112,7 +124,7 @@ function renderBlock(block: OutputData["blocks"][0], theme: "light" | "dark"): R
         withBackground?: boolean;
         stretched?: boolean;
       };
-      
+
       // Get link from tune data
       const tuneData = block.tunes?.imageLink as { url?: string } | undefined;
       const linkUrl = tuneData?.url;
@@ -120,13 +132,18 @@ function renderBlock(block: OutputData["blocks"][0], theme: "light" | "dark"): R
       const imageUrl = imageData.file?.url || imageData.url || "";
       const alignment = imageData.alignment || "center";
       const width = imageData.width || undefined;
-      
+
       if (!imageUrl) return null;
 
       const imageStyle: React.CSSProperties = {
         maxWidth: width ? `${width}px` : "100%",
         height: "auto",
-        margin: alignment === "center" ? "0 auto" : alignment === "left" ? "0 auto 0 0" : "0 0 0 auto",
+        margin:
+          alignment === "center"
+            ? "0 auto"
+            : alignment === "left"
+            ? "0 auto 0 0"
+            : "0 0 0 auto",
         display: "block",
         border: imageData.withBorder ? "2px solid #e5e7eb" : "none",
         backgroundColor: imageData.withBackground ? "#f3f4f6" : "transparent",
@@ -135,13 +152,22 @@ function renderBlock(block: OutputData["blocks"][0], theme: "light" | "dark"): R
       };
 
       const imageElement = (
-        <img src={imageUrl} alt={imageData.caption || ""} style={imageStyle} />
+        <Image
+          src={imageUrl}
+          alt={imageData.caption || ""}
+          style={imageStyle}
+        />
       );
 
       return (
         <figure key={block.id} className="mb-4">
           {linkUrl ? (
-            <a href={linkUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", textDecoration: "none" }}>
+            <a
+              href={linkUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: "inline-block", textDecoration: "none" }}
+            >
               {imageElement}
             </a>
           ) : (
@@ -161,11 +187,13 @@ function renderBlock(block: OutputData["blocks"][0], theme: "light" | "dark"): R
         rightContent?: string;
         layout?: "50-50" | "33-67" | "67-33";
       };
-      
-      const gridCols = 
-        columnsData.layout === "33-67" ? "grid-cols-[1fr_2fr]" :
-        columnsData.layout === "67-33" ? "grid-cols-[2fr_1fr]" :
-        "grid-cols-2";
+
+      const gridCols =
+        columnsData.layout === "33-67"
+          ? "grid-cols-[1fr_2fr]"
+          : columnsData.layout === "67-33"
+          ? "grid-cols-[2fr_1fr]"
+          : "grid-cols-2";
 
       return (
         <div key={block.id} className={`mb-4 grid ${gridCols} gap-4`}>
@@ -185,7 +213,7 @@ function renderBlock(block: OutputData["blocks"][0], theme: "light" | "dark"): R
         url?: string;
         caption?: string;
       };
-      
+
       if (!youtubeData.url) return null;
 
       // Extract video ID from URL
@@ -208,7 +236,10 @@ function renderBlock(block: OutputData["blocks"][0], theme: "light" | "dark"): R
 
       return (
         <figure key={block.id} className="mb-4">
-          <div className="relative w-full" style={{ paddingBottom: "56.25%", height: 0, overflow: "hidden" }}>
+          <div
+            className="relative w-full"
+            style={{ paddingBottom: "56.25%", height: 0, overflow: "hidden" }}
+          >
             <iframe
               src={embedUrl}
               className="absolute top-0 left-0 w-full h-full"
@@ -234,14 +265,18 @@ function renderBlock(block: OutputData["blocks"][0], theme: "light" | "dark"): R
         points?: string[];
       };
 
-      const flexDirection = columnData.imagePosition === "right" ? "flex-row-reverse" : "flex-row";
+      const flexDirection =
+        columnData.imagePosition === "right" ? "flex-row-reverse" : "flex-row";
 
       return (
-        <div key={block.id} className={`mb-6 flex gap-6 items-start ${flexDirection} flex-wrap`}>
+        <div
+          key={block.id}
+          className={`mb-6 flex gap-6 items-start ${flexDirection} flex-wrap`}
+        >
           {/* Image Column */}
           <div className="flex-1 min-w-[250px]">
             {columnData.imageUrl && (
-              <img
+              <Image
                 src={columnData.imageUrl}
                 alt={columnData.heading || "Column image"}
                 className="w-full h-auto rounded-lg object-cover"
@@ -258,9 +293,7 @@ function renderBlock(block: OutputData["blocks"][0], theme: "light" | "dark"): R
               </h3>
             )}
             {columnData.description && (
-              <p className={`mb-4 ${textColor}`}>
-                {columnData.description}
-              </p>
+              <p className={`mb-4 ${textColor}`}>{columnData.description}</p>
             )}
             {columnData.points && columnData.points.length > 0 && (
               <ul className={`list-disc pl-6 space-y-2 ${textColor}`}>
@@ -277,4 +310,3 @@ function renderBlock(block: OutputData["blocks"][0], theme: "light" | "dark"): R
       return null;
   }
 }
-

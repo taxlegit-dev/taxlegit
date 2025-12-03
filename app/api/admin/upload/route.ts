@@ -21,7 +21,10 @@ export async function POST(request: Request) {
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "File must be an image" }, { status: 400 });
+      return NextResponse.json(
+        { error: "File must be an image" },
+        { status: 400 }
+      );
     }
 
     // Convert file to base64 or upload to cloud storage
@@ -43,9 +46,8 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ url: dataUrl, id: mediaAsset.id });
-  } catch (error: any) {
-    console.error("Upload error:", error);
-    return NextResponse.json({ error: error.message || "Upload failed" }, { status: 500 });
+  } catch {
+    console.error("Upload error:");
+    return NextResponse.json("Upload failed", { status: 500 });
   }
 }
-

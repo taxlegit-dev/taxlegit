@@ -2,8 +2,6 @@ import { Region, PageKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { RegionFilter } from "@/components/admin/region-filter";
 import { PageForm } from "@/components/admin/forms/page-form";
-import type { RichTextDocument } from "@/types/rich-text";
-
 type AdminPagesPageProps = {
   searchParams?: { region?: string };
 };
