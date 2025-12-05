@@ -2,10 +2,7 @@ import { Building2 } from "lucide-react";
 
 export default function TaxLegitHero() {
   return (
-    <div
-      className="relative bg-white px-4 sm:px-6 lg:px-8 overflow-hidden grid items-center"
-      style={{ minHeight: "calc(100vh - 73px)" }}
-    >
+    <div className="relative bg-white px-4 sm:px-6 lg:px-8  grid items-center">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
       <div className="absolute bottom-0 right-0 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>

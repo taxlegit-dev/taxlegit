@@ -62,7 +62,7 @@ export function MegaNavbar({ region, initialItems = [] }: MegaNavbarProps) {
   };
 
   return (
-    <header className="w-full border-b border-gray-200 bg-white">
+    <header className="relative z-50 w-full border-b border-gray-200 bg-white">
       <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-between px-6">
         {/* Logo */}
         <Link
@@ -106,6 +106,7 @@ export function MegaNavbar({ region, initialItems = [] }: MegaNavbarProps) {
                     <div
                       className="
       absolute left-1/2 top-full w-[650px]
+      z-[100]
       -translate-x-1/2 
       rounded-xl 
       border border-zinc-100

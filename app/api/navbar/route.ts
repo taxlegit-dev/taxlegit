@@ -27,22 +27,17 @@ export async function GET(request: Request) {
   // Separate top-level items and their children
   const topLevelItems = items.filter((item) => !item.parentId);
 
-  // Group children by groupLabel for mega-menu structure
   const structuredItems = topLevelItems.map((item) => {
     const children = item.children;
 
-    // Group children by groupLabel
-    const groupedChildren = children.reduce(
-      (acc, child) => {
-        const groupKey = child.groupLabel || "default";
-        if (!acc[groupKey]) {
-          acc[groupKey] = [];
-        }
-        acc[groupKey].push(child);
-        return acc;
-      },
-      {} as Record<string, typeof children>
-    );
+    const groupedChildren = children.reduce((acc, child) => {
+      const groupKey = child.groupLabel || "default";
+      if (!acc[groupKey]) {
+        acc[groupKey] = [];
+      }
+      acc[groupKey].push(child);
+      return acc;
+    }, {} as Record<string, typeof children>);
 
     return {
       id: item.id,
@@ -65,4 +60,3 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ items: structuredItems, region });
 }
-

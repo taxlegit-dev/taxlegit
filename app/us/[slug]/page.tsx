@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { NavbarServer } from "@/components/navigation/navbar-server";
 import { UsHero } from "@/components/hero/us-hero";
 import { ServicePageView } from "@/components/service-page/service-page-view";
+import { FAQSection } from "@/components/faq/faq-section";
 
 type DynamicPageProps = {
   params: Promise<{ slug: string }>;
@@ -67,6 +68,16 @@ export default async function UsDynamicPage({ params }: DynamicPageProps) {
     },
   });
 
+  // Fetch FAQ if exists
+  const faq = await prisma.servicePageFAQ.findUnique({
+    where: { navbarItemId: navbarItem.id },
+    include: {
+      questions: {
+        orderBy: { order: "asc" },
+      },
+    },
+  });
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <NavbarServer region={region} />
@@ -89,6 +100,9 @@ export default async function UsDynamicPage({ params }: DynamicPageProps) {
             </div>
           </section>
         ) : null}
+        {faq && faq.status === "PUBLISHED" && faq.questions.length > 0 && (
+          <FAQSection questions={faq.questions} region="US" />
+        )}
       </main>
       <footer className="border-t border-white/10">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-8 text-sm text-slate-400">

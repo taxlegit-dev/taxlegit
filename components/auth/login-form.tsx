@@ -58,7 +58,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
   return (
     <form
       onSubmit={onSubmit}
-      className="w-full space-y-4 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm"
+      className="w-full space-y-4 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm text-black"
     >
       <div className="space-y-1">
         <label className="text-sm font-medium text-zinc-800" htmlFor="email">

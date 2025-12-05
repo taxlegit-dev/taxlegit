@@ -59,3 +59,20 @@ export const updatePageHeroSchema = createPageHeroSchema.extend({
   id: z.string().min(1),
 });
 
+export const createServicePageFAQSchema = z.object({
+  navbarItemId: z.string().min(1),
+  region: regionEnum,
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).default("DRAFT"),
+  questions: z.array(
+    z.object({
+      question: z.string().min(3),
+      answer: z.string().min(10),
+      order: z.number().int().min(0).default(0),
+    })
+  ).min(1),
+});
+
+export const updateServicePageFAQSchema = createServicePageFAQSchema.extend({
+  id: z.string().min(1),
+});
+

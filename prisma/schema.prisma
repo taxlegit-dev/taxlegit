@@ -200,3 +200,31 @@ model ServicePageSection {
 
   @@index([servicePageId, order])
 }
+
+model ServicePageFAQ {
+  id            String   @id @default(cuid())
+  navbarItemId  String   @unique // Links to NavbarItem
+  region        Region   @default(INDIA)
+  status        ContentStatus @default(DRAFT)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  questions     ServicePageFAQItem[]
+
+  @@unique([navbarItemId, region])
+  @@index([region, status])
+}
+
+model ServicePageFAQItem {
+  id            String   @id @default(cuid())
+  faqId         String
+  question      String
+  answer        String   // Can be HTML or Editor.js JSON
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  faq           ServicePageFAQ @relation(fields: [faqId], references: [id], onDelete: Cascade)
+
+  @@index([faqId, order])
+}
