@@ -15,8 +15,11 @@ import type { OutputData } from "@editorjs/editorjs";
 
 // Dynamically import EditorJsEditor to avoid SSR issues
 const EditorJsEditor = dynamic(
-  () => import("@/components/editor/editorjs-editor").then((mod) => ({ default: mod.EditorJsEditor })),
-  { 
+  () =>
+    import("@/components/editor/editorjs-editor").then((mod) => ({
+      default: mod.EditorJsEditor,
+    })),
+  {
     ssr: false,
     loading: () => (
       <div className="rounded-xl border border-slate-200 bg-white p-8 min-h-[300px] flex items-center justify-center text-slate-400">
@@ -429,15 +432,25 @@ export function ServicePageManager({
                   </label>
                   <EditorJsEditor
                     key={`section-${field.id}-${index}`}
-                    value={field.content ? (typeof field.content === "string" ? tryParseEditorJson(field.content) : field.content) : undefined}
+                    value={
+                      field.content
+                        ? typeof field.content === "string"
+                          ? tryParseEditorJson(field.content)
+                          : field.content
+                        : undefined
+                    }
                     onChange={(value) => {
                       // Store as JSON string
-                      form.setValue(`sections.${index}.content`, JSON.stringify(value), {
-                        shouldDirty: true,
-                        shouldValidate: false,
-                      });
+                      form.setValue(
+                        `sections.${index}.content`,
+                        JSON.stringify(value),
+                        {
+                          shouldDirty: true,
+                          shouldValidate: false,
+                        }
+                      );
                     }}
-                    placeholder="Enter section content..."
+                    placeholder=""
                     onImageUpload={async (file) => {
                       const formData = new FormData();
                       formData.append("file", file);

@@ -197,3 +197,51 @@ model ServicePageFAQItem {
 
   @@index([faqId, order])
 }
+
+/// Blog Group - Groups blogs together (e.g., "Company Registration", "Tax Tips")
+model BlogGroup {
+  id          String   @id @default(cuid())
+  name        String
+  region      Region   @default(INDIA)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  blogs       Blog[]
+
+  @@unique([name, region], map: "BlogGroup_name_region_unique")
+  @@index([region, order])
+}
+
+/// Blog Post - Individual blog posts
+model Blog {
+  id          String   @id @default(cuid())
+  title       String
+  image       String?  // Image URL
+  content     String   // Blog content (Editor.js JSON or HTML)
+  blogGroupId String
+  region      Region   @default(INDIA)
+  status      ContentStatus @default(DRAFT)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  blogGroup   BlogGroup @relation(fields: [blogGroupId], references: [id], onDelete: Cascade)
+
+  @@index([region, status])
+  @@index([blogGroupId])
+}
+
+/// Static Page - For static pages like Home, About
+model StaticPage {
+  id          String   @id @default(cuid())
+  key         PageKey
+  region      Region   @default(INDIA)
+  title       String
+  content     Json     // Flexible JSON for page content
+  status      ContentStatus @default(DRAFT)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([key, region], map: "StaticPage_key_region_unique")
+  @@index([region, key])
+}
